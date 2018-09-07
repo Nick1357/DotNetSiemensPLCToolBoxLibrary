@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Text;
 using System.Windows.Forms;
 using System.Xml;
@@ -20,11 +22,13 @@ namespace TiaGitHandler
 
             string file = "";
             string exportPath = "";
+            string user = null;
+            string password = null;
 
             if (args.Count() < 1)
             {
                 OpenFileDialog op = new OpenFileDialog();
-                op.Filter = "TIA-Portal Project|*.ap13;*.ap14";
+                op.Filter = "TIA-Portal Project|*.ap13;*.ap14;*.ap15";
                 op.CheckFileExists = false;
                 op.ValidateNames = false;
                 var ret = op.ShowDialog();
@@ -60,13 +64,33 @@ namespace TiaGitHandler
             else
             {
                 file = args[0];
+                if (args.Length > 1)
+                    user = args[1];
+                if (args.Length > 2)
+                    password = args[2];
             }
 
-            var prj = Projects.LoadProject(file, false);
+            Credentials credentials = null;
+            if (!string.IsNullOrEmpty(user) && !string.IsNullOrEmpty(password))
+            {
+                credentials = new Credentials() {Username = user, Password = new SecureString()};
+                foreach (char c in password)
+                {
+                    credentials.Password.AppendChar(c);
+                }
+            }
+            var prj = Projects.LoadProject(file, false, credentials);
 
-            ParseFolder(prj.ProjectStructure, exportPath);
+            List<string> skippedBlocksList = new List<string>();
+            ParseFolder(prj.ProjectStructure, exportPath, skippedBlocksList);
 
-            //Console.ReadLine();
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Red;
+            skippedBlocksList.ForEach(i => Console.WriteLine("{0}", i));
+            Console.WriteLine();
+            Console.WriteLine(skippedBlocksList.Count() + " blocks were skipped");
+            Console.ReadKey();
         }
 
         private class EncodingStringWriter : StringWriter
@@ -84,14 +108,14 @@ namespace TiaGitHandler
             }
         }
 
-        private static void ParseFolder(ProjectFolder folder, string dir)
+        private static void ParseFolder(ProjectFolder folder, string dir, List<string> skippedBlocksList)
         {
             //Directory.CreateDirectory(dir);
             var path = Path.Combine(dir, NormalizeFolderName(folder.Name));
-            
+
             foreach (var projectFolder in folder.SubItems)
             {
-                ParseFolder(projectFolder, path);
+                ParseFolder(projectFolder, path, skippedBlocksList);
             }
 
             if (folder is IBlocksFolder)
@@ -257,6 +281,7 @@ namespace TiaGitHandler
                     catch (Exception ex)
                     {
                         Console.WriteLine("Skipping Block: \"" + projectBlockInfo.Name + "\" Exception: " + ex.Message);
+                        skippedBlocksList.Add(projectBlockInfo.Name);
                     }
                 }
             }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security;
 using System.Xml.Linq;
 using DotNetSiemensPLCToolBoxLibrary.DataTypes;
 using DotNetSiemensPLCToolBoxLibrary.DataTypes.Blocks;
@@ -222,6 +223,34 @@ namespace DotNetSiemensPLCToolBoxLibrary.Projectfiles.V15
 
             public List<TIAOpennessConstant> Constants { get; set; }
 
+            public IEnumerable<TIAOpennessTag> Tags { get; internal set; }
+        }
+
+        public class TIAOpennessTag
+        {
+            public string Name { get; set; }
+            public string Address { get; set; }
+            public string DataTypeName { get; set; }
+            public List<TIAOpennessComment> Comments { get; set; }
+            public bool IsExternalAccessible { get; set; }
+            public bool IsExternalVisible { get; set; }
+
+            internal TIAOpennessTag(PlcTag source)
+            {
+                Name = source.Name;
+                Address = source.LogicalAddress;
+                DataTypeName = source.DataTypeName;
+                Comments = source.Comment.Items
+                    .Select(c => new TIAOpennessComment() { Culture = c.Language.Culture, Text = c.Text }).ToList();
+                IsExternalAccessible = source.ExternalAccessible;
+                IsExternalVisible = source.ExternalVisible;
+            }
+        }
+
+        public class TIAOpennessComment
+        {
+            public object Culture { get; internal set; }
+            public string Text { get; internal set; }
         }
 
         public class TIAOpennessConstant
@@ -375,6 +404,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Projectfiles.V15
                     {
                         var info = new TIAOpennessTagTable() { Name = tagList.Name };
                         retVal.Add(info);
+                        info.Tags = tagList.Tags.Select(t => new TIAOpennessTag(t));
                         info.Constants = new List<TIAOpennessConstant>();
                         foreach (var c in tagList.UserConstants)
                         {
@@ -555,7 +585,8 @@ namespace DotNetSiemensPLCToolBoxLibrary.Projectfiles.V15
                 return ParseTiaDbUdtXml(text, blkInfo, ControllerFolder, ParseType.Programm);
             }
         }
-        internal void LoadViaOpennessDlls()
+
+        internal void LoadViaOpennessDlls(Credentials credentials)
         {
             for (int i = 0; i < 10; i++)
             {
@@ -567,7 +598,19 @@ namespace DotNetSiemensPLCToolBoxLibrary.Projectfiles.V15
                         tiaPortal = null;
                     }
                     tiaPortal = new Siemens.Engineering.TiaPortal(Siemens.Engineering.TiaPortalMode.WithoutUserInterface);
-                    tiapProject = tiaPortal.Projects.Open(new FileInfo(ProjectFile));
+                    if (credentials != null)
+                    {
+                        tiapProject = tiaPortal.Projects.Open(new FileInfo(ProjectFile), c =>
+                        {
+                            c.Type = UmacUserType.Project;
+                            c.Name = credentials.Username;
+                            c.SetPassword(credentials.Password);
+                        });
+                    }
+                    else
+                    {
+                        tiapProject = tiaPortal.Projects.Open(new FileInfo(ProjectFile));
+                    }
                 }
                 catch (Siemens.Engineering.EngineeringSecurityException ex)
                 {
