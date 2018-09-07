@@ -637,7 +637,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
                     var myPDU = myConn._dc.createPDU();
 
-                    para = new byte[] {0x00, 0x01, 0x12, 0x08, 0x12, 0x41, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00};
+                    para = new byte[] { 0x00, 0x01, 0x12, 0x08, 0x12, 0x41, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00 };
                     data = new byte[]
                     {
                         0x00, 0x14, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
@@ -1891,7 +1891,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     byte[] para;
                     byte[] data;
 
-                    para = new byte[] {0x00, 0x01, 0x12, 0x08, 0x12, 0x41, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00};
+                    para = new byte[] { 0x00, 0x01, 0x12, 0x08, 0x12, 0x41, 0x0f, 0x00, 0x00, 0x00, 0x00, 0x00 };
                     data = new byte[]
                     {
                         0x00, 0x14, 0x00, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
@@ -1980,12 +1980,12 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             break;
                     }
 
-                    akAsk[0] = (byte) (dtaTyp * 0x10 + dtaSize);
-                    akAsk[1] = (byte) dtaArrSize;
-                    akAsk[2] = (byte) (dbNo / 0x100);
-                    akAsk[3] = (byte) (dbNo % 0x100);
-                    akAsk[4] = (byte) (plcTag.ByteAddress / 0x100);
-                    akAsk[5] = (byte) (plcTag.ByteAddress % 0x100);
+                    akAsk[0] = (byte)(dtaTyp * 0x10 + dtaSize);
+                    akAsk[1] = (byte)dtaArrSize;
+                    akAsk[2] = (byte)(dbNo / 0x100);
+                    akAsk[3] = (byte)(dbNo % 0x100);
+                    akAsk[4] = (byte)(plcTag.ByteAddress / 0x100);
+                    akAsk[5] = (byte)(plcTag.ByteAddress % 0x100);
 
                     askBytes.AddRange(akAsk);
 
@@ -1999,7 +1999,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                 byte[] para;
                 byte[] data;
 
-                para = new byte[] {0x00, 0x01, 0x12, 0x08, 0x12, 0x41, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00};
+                para = new byte[] { 0x00, 0x01, 0x12, 0x08, 0x12, 0x41, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00 };
                 data = new byte[]
                 {
                     0x00, 0x14, BitConverter.GetBytes(len1)[1], BitConverter.GetBytes(len1)[0], 0x00, 0x00, 0x00, 0x01,
@@ -2017,7 +2017,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                 byte[] rdata, rparam;
                 int res = _dc.daveRecieveData(out rdata, out rparam);
 
-                byte[] stid = new byte[] {rparam[6], rparam[7]};
+                byte[] stid = new byte[] { rparam[6], rparam[7] };
 
                 if (rparam[10] != 0x00 && rparam[11] != 0x00) // 0xd05f
                     throw new Exception("Error Reading Tags with Var Tab Functions, Error Code: 0x" +
@@ -2101,12 +2101,12 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             break;
                     }
 
-                    akAsk[0] = (byte) (dtaTyp * 0x10 + dtaSize);
-                    akAsk[1] = (byte) dtaArrSize;
-                    akAsk[2] = (byte) (dbNo / 0x100);
-                    akAsk[3] = (byte) (dbNo % 0x100);
-                    akAsk[4] = (byte) (plcTag.ByteAddress / 0x100);
-                    akAsk[5] = (byte) (plcTag.ByteAddress % 0x100);
+                    akAsk[0] = (byte)(dtaTyp * 0x10 + dtaSize);
+                    akAsk[1] = (byte)dtaArrSize;
+                    akAsk[2] = (byte)(dbNo / 0x100);
+                    akAsk[3] = (byte)(dbNo % 0x100);
+                    akAsk[4] = (byte)(plcTag.ByteAddress / 0x100);
+                    akAsk[5] = (byte)(plcTag.ByteAddress % 0x100);
 
                     controlBytes.AddRange(akAsk);
 
@@ -2127,7 +2127,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
                 var myPDU = _dc.createPDU();
 
-                para = new byte[] {0x00, 0x01, 0x12, 0x08, 0x12, 0x41, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00};
+                para = new byte[] { 0x00, 0x01, 0x12, 0x08, 0x12, 0x41, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00 };
                 data = new byte[]
                 {
                     //1 means use Trigger? maybe
@@ -2147,7 +2147,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                 byte[] rdata, rparam;
                 int res = _dc.daveRecieveData(out rdata, out rparam);
 
-                byte[] stid = new byte[] {rparam[6], rparam[7]};
+                byte[] stid = new byte[] { rparam[6], rparam[7] };
 
                 if (rparam[10] != 0x00 && rparam[11] != 0x00) // 0xd05f
                     throw new Exception("Error Wrting Tags with VarTab Functions, Error Code: 0x" +
@@ -2701,7 +2701,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             {
                                 if (oldDataSource == plcTag.TagDataSource &&
                                     (oldDataSource != MemoryArea.Datablock || oldDB == plcTag.DataBlockNumber) &&
-                                    plcTag.ByteAddress <= oldByteAddress + (oldLen % 2 != 0 ? oldLen +1 : oldLen) + 4)
+                                    plcTag.ByteAddress <= oldByteAddress + (oldLen % 2 != 0 ? oldLen + 1 : oldLen) + 4)
                                 {
                                     if (cntCombinedTags == 1)
                                         rdHlp.PLCTags.Add(lastTag, 0);
@@ -3099,7 +3099,8 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     }
                 }
             }
-            finally {
+            finally
+            {
                 if (lockObtained)
                 {
                     Monitor.Exit(lockObj);
@@ -3520,7 +3521,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     }*/
 
                     //PLCNckTag kann im Moment noch nicht optimiert werden
-                    if (useWriteOptimation && !(valueList.Cast<PLCTag>().ToList()[0] is PLCNckTag))
+                    if (useWriteOptimation && !(valueList.First() is PLCNckTag))
                     {
                         #region Optimize Writing List....
 
@@ -3636,8 +3637,8 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         var currVal = valueListT[0];
                         var currValSize = currVal._internalGetSize();
 
-                        if (!(currVal is PLCNckTag) && gesWriteSize < maxWriteSize && //Maximale Byte Anzahl noch nicht erreicht
-                            /*anzWriteVar < maxWriteVar &&*/
+                        if (gesWriteSize < maxWriteSize && //Maximale Byte Anzahl noch nicht erreicht
+                                                           /*anzWriteVar < maxWriteVar &&*/
                             ( //maximale Variablenanzahl noch nicht erreicht                        
                                 splitPos != 0 || //Value ist schon gesplitted
                                 !currVal.DontSplitValue || //Value Kann gesplitted Werden
@@ -3658,14 +3659,44 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                                 {
                                     byte[] wrt = new byte[currValSize];
                                     currVal._putControlValueIntoBuffer(wrt, 0);
+                                    if (currVal is PLCNckTag)
+                                    {
+                                        var nckT = currVal as PLCNckTag;
+                                        #region Reverse
+                                        if (nckT != null && nckT.TagDataType != TagDataType.String && nckT.TagDataType != TagDataType.CharArray && nckT.NckArea != NCK_Area.AreaFeedDrive && nckT.NckArea != NCK_Area.AreaMainDrive)
+                                            System.Array.Reverse(wrt, 0, wrt.Length);
+                                        #endregion
 
-                                    if (currVal.TagDataType == TagDataType.Bool)
-                                        myPDU.addBitVarToWriteRequest(Convert.ToInt32(currVal.TagDataSource),
-                                            currVal.DataBlockNumber,
-                                            (currVal.ByteAddress + splitPos) * 8 + currVal.BitAddress, 1, wrt);
+                                        #region Transport sizes
+                                        //**************************************************************************
+                                        // Transport sizes in data
+                                        //
+                                        //S7COMM_DATA_TRANSPORT_SIZE_NULL     0
+                                        //S7COMM_DATA_TRANSPORT_SIZE_BBIT     3           /* bit access, len is in bits */
+                                        //S7COMM_DATA_TRANSPORT_SIZE_BBYTE    4           /* byte/word/dword access, len is in bits */
+                                        //S7COMM_DATA_TRANSPORT_SIZE_BINT     5           /* integer access, len is in bits */
+                                        //S7COMM_DATA_TRANSPORT_SIZE_BDINT    6           /* integer access, len is in bytes */
+                                        //S7COMM_DATA_TRANSPORT_SIZE_BREAL    7           /* real access, len is in bytes */
+                                        //S7COMM_DATA_TRANSPORT_SIZE_BSTR     9           /* octet string, len is in bytes */
+                                        //**************************************************************************
+
+                                        //int transsize = 4;
+                                        //if (nckT.TagDataType == TagDataType.LReal)
+                                        //    transsize = 9;
+
+                                        #endregion
+                                        myPDU.addNCKToWriteRequest((int)nckT.NckArea, nckT.NckUnit, nckT.NckColumn, nckT.NckLine, nckT.NckModule, nckT.NckLinecount, wrt.Length, wrt);
+                                    }
                                     else
-                                        myPDU.addVarToWriteRequest(Convert.ToInt32(currVal.TagDataSource),
-                                            currVal.DataBlockNumber, currVal.ByteAddress + splitPos, currValSize, wrt);
+                                    {
+                                        if (currVal.TagDataType == TagDataType.Bool)
+                                            myPDU.addBitVarToWriteRequest(Convert.ToInt32(currVal.TagDataSource),
+                                                currVal.DataBlockNumber,
+                                                (currVal.ByteAddress + splitPos) * 8 + currVal.BitAddress, 1, wrt);
+                                        else
+                                            myPDU.addVarToWriteRequest(Convert.ToInt32(currVal.TagDataSource),
+                                                currVal.DataBlockNumber, currVal.ByteAddress + splitPos, currValSize, wrt);
+                                    }
                                     gesWriteSize += tagHeaderSize + wrt.Length;
                                 }
                                 //Wert war gesplittet
@@ -3711,44 +3742,11 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                                 splitPos = splitPos + maxCurrAddSize;
                                 anzWriteVar++;
                             }
-
                         }
                         else
                         {
                             //Send Request
                             rs = new libnodave.resultSet();
-
-                            if (currVal is PLCNckTag)
-                            {
-                                byte[] wrt = new byte[currValSize];
-                                currVal._putControlValueIntoBuffer(wrt, 0);
-                                var nckT = currVal as PLCNckTag;
-                                #region Reverse
-                                if (nckT != null && nckT.TagDataType != TagDataType.String && nckT.TagDataType != TagDataType.CharArray && nckT.NckArea != NCK_Area.AreaFeedDrive && nckT.NckArea != NCK_Area.AreaMainDrive)
-                                    System.Array.Reverse(wrt, 0, wrt.Length);
-                                #endregion
-
-                                #region Transport sizes
-                                //**************************************************************************
-                                // Transport sizes in data
-                                //
-                                //S7COMM_DATA_TRANSPORT_SIZE_NULL     0
-                                //S7COMM_DATA_TRANSPORT_SIZE_BBIT     3           /* bit access, len is in bits */
-                                //S7COMM_DATA_TRANSPORT_SIZE_BBYTE    4           /* byte/word/dword access, len is in bits */
-                                //S7COMM_DATA_TRANSPORT_SIZE_BINT     5           /* integer access, len is in bits */
-                                //S7COMM_DATA_TRANSPORT_SIZE_BDINT    6           /* integer access, len is in bytes */
-                                //S7COMM_DATA_TRANSPORT_SIZE_BREAL    7           /* real access, len is in bytes */
-                                //S7COMM_DATA_TRANSPORT_SIZE_BSTR     9           /* octet string, len is in bytes */
-                                //**************************************************************************
-
-                                //int transsize = 4;
-                                //if (nckT.TagDataType == TagDataType.LReal)
-                                //    transsize = 9;
-
-                                #endregion
-                                myPDU.addNCKToWriteRequest((int)nckT.NckArea, nckT.NckUnit, nckT.NckColumn, nckT.NckLine, nckT.NckModule, nckT.NckLinecount, wrt.Length, wrt);
-                                valueListT.Remove(currVal); //Wert erledigt... löschen....
-                            }
 
                             lock (lockObj)
                             {
