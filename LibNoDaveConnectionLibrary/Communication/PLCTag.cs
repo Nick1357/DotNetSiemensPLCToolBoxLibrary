@@ -389,6 +389,61 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             }
         }
 
+        public virtual Type TagManagedType
+        {
+            get
+            {
+                switch (this.tagDataType)
+                {
+                    case TagDataType.Bool:
+                        return typeof(Boolean);
+                    case TagDataType.Int:
+                    case TagDataType.BCDWord:
+                        return typeof(Int16);
+                    case TagDataType.Dint:
+                    case TagDataType.BCDDWord:
+                        return typeof(Int32);
+                    case TagDataType.Byte:
+                        return typeof(Byte);
+                    case TagDataType.SByte:
+                    case TagDataType.BCDByte:
+                        return typeof(SByte);
+                    case TagDataType.Word:
+                        return typeof(UInt16);
+                    case TagDataType.Dword:
+                        return typeof(UInt32);
+                    case TagDataType.Float:
+                        return typeof(Single);
+                    case TagDataType.String:
+                    case TagDataType.CharArray:
+                        return typeof(String);
+                    case TagDataType.DateTime:
+                    case TagDataType.Date:
+                    case TagDataType.TimeOfDay:
+                    case TagDataType.LTimeOfDay:
+                        return typeof(DateTime);
+                    case TagDataType.Time:
+                    case TagDataType.S5Time:
+                    case TagDataType.LTime:
+                        return typeof(TimeSpan);
+                    case TagDataType.ByteArray:
+                        return typeof(Byte[]);
+                    case TagDataType.LInt:
+                        return typeof(Int64);
+                    case TagDataType.LWord:
+                        return typeof(UInt64);
+                    case TagDataType.LReal:
+                        return typeof(double);
+                    case TagDataType.BCDArray:
+                        return typeof(UInt64);
+
+                    //case TagDataType.Struct:
+                    default:
+                        throw new NotImplementedException();
+                }
+            }
+        }
+
         //For a List of old Values...
         protected List<Object> _oldvalues;
         /// <summary>
