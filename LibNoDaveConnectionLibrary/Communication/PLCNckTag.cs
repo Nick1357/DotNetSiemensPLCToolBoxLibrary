@@ -176,6 +176,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
             private static int HexParse(string s, SG.CultureInfo culture)
             {
+                s = s.Trim();
                 if (s.StartsWith("0x", StringComparison.OrdinalIgnoreCase))
                 {
                     s = s.Substring(2);
