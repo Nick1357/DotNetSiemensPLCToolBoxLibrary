@@ -1789,7 +1789,7 @@ int DECL2 daveExecReadRequest(daveConnection * dc, PDU *p, daveResultSet* rl){
 			/*		printf("result %d: %d  %d %d %d\n",i, *q,q[1],q[2],q[3]); */
 			if (daveDebug & daveDebugPDU)
 			{
-				LOG2("daveExecReadRequest result %d: %d  %d %d %d\n", i, *q, q[1], q[2], q[3]);
+				LOG6("daveExecReadRequest result %d: %d  %d %d %d\n", i, *q, q[1], q[2], q[3]);
 				FLUSH;
 			}
 			if ((*q == 255) && (rlen>4)) {
@@ -1823,7 +1823,7 @@ int DECL2 daveExecReadRequest(daveConnection * dc, PDU *p, daveResultSet* rl){
 			/*		printf("Store result %d length:%d\n", i, len); */
 			if (daveDebug & daveDebugPDU)
 			{
-				LOG2("Store result %d length:%d\n", i, len);
+				LOG3("Store result %d length:%d\n", i, len);
 				FLUSH;
 			}
 			c2->length = len;
@@ -1947,7 +1947,7 @@ int DECL2 daveUseResultBuffer(daveResultSet * rl, int n, void * buffer){
 	daveResult * dr;
 	if (daveDebug & daveDebugAll)
 	{
-		LOG2("daveUseResultBuffer(result set:%p, number:%d)\n", rl, n);
+		LOG3("daveUseResultBuffer(result set:%p, number:%d)\n", rl, n);
 	}
 	if (rl == NULL)
 	{
