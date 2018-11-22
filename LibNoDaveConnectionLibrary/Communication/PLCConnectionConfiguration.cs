@@ -35,7 +35,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 {
 #if !IPHONE
     [System.ComponentModel.Editor(typeof(PLCConnectionUITypeEditor), typeof(System.Drawing.Design.UITypeEditor))]
-#endif   
+#endif
     [Serializable]
     /// <summary>
     /// This Class stores the Connection Configuration to a PLC
@@ -145,6 +145,8 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             get { return _port; }
             set { _port = value; NotifyPropertyChanged("Port"); NotifyPropertyChanged("ObjectAsString"); }
         }
+
+        public int MaxPDUlength { get; set; }
 
         private int _writePort = 30501;
         public int WritePort
@@ -290,7 +292,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             set { _routingSubnet2 = value; NotifyPropertyChanged("RoutingSubnet2"); NotifyPropertyChanged("ObjectAsString"); }
         }
 
-        private TimeSpan _timeout = TimeSpan.FromMilliseconds( 5000); 
+        private TimeSpan _timeout = TimeSpan.FromMilliseconds(5000);
         /// <summary>
         /// The timeout to wait for responses from the PLC
         /// in microseconds
@@ -329,11 +331,11 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
         /// Used for serialization only.
         /// </summary>
         /// <remarks>The Problem is that the XML Serializer can not serialize Timespans. So serialize an "hidden" integer instead</remarks>
-        [XmlElement (ElementName = "TimeoutIPConnect"), Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
+        [XmlElement(ElementName = "TimeoutIPConnect"), Browsable(false), EditorBrowsable(EditorBrowsableState.Never)]
         public int TimeoutIPConnectMiliseconds
         {
-            get { return (int)TimeoutIPConnect.TotalMilliseconds;}
-            set { _timeoutIpConnect = TimeSpan.FromMilliseconds (value); }
+            get { return (int)TimeoutIPConnect.TotalMilliseconds; }
+            set { _timeoutIpConnect = TimeSpan.FromMilliseconds(value); }
         }
 
         private bool _initDone { get; set; }
@@ -356,7 +358,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 #if !IPHONE
             if (File.Exists(ConfigurationPathAndFilename))
             {
-                
+
                 Dictionary<String, PLCConnectionConfiguration> Connections = null;
                 using (TextReader strm = new StreamReader(ConfigurationPathAndFilename))
                 {
@@ -364,7 +366,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     strm.Close();
                 }
 
-                 //Connections = General.SerializeToString<Dictionary<String, PLCConnectionConfiguration>>.DeSerialize(txt);                    
+                //Connections = General.SerializeToString<Dictionary<String, PLCConnectionConfiguration>>.DeSerialize(txt);
                 if (Connections != null)
                 {
                     string[] Names = new string[Connections.Count];
@@ -427,7 +429,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
         public static List<PLCConnectionConfiguration> ExportConfigurations()
         {
             List<PLCConnectionConfiguration> retVal = new List<PLCConnectionConfiguration>();
-            
+
             foreach (var myName in GetConfigurationNames())
             {
                 retVal.Add(new PLCConnectionConfiguration(myName));
@@ -445,7 +447,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             {
                 myConfig.ConfigurationType = LibNodaveConnectionConfigurationType.RegistrySavedConfiguration;
                 myConfig.SaveConfiguration();
-            }            
+            }
         }
 
         private static string ConfigurationPathAndFilename
@@ -555,7 +557,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     this.CpuRack = 0;
                     this.CpuSlot = 2;
                     this.Port = 102;
-                    this.TimeoutIPConnect = TimeSpan.FromMilliseconds (5000);
+                    this.TimeoutIPConnect = TimeSpan.FromMilliseconds(5000);
                     this.Timeout = TimeSpan.FromMilliseconds(5000);
                     _initDone = true;
                 }
@@ -637,11 +639,11 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
                 //Find next "Closing" tag and extract the current numerical value
                 int Eidx = New.IndexOf("</", idx, StringComparison.Ordinal);
-                string Value = New.Substring(idx, Eidx-idx);
+                string Value = New.Substring(idx, Eidx - idx);
 
                 //Convert to enumeration and replace in file
                 string EnumValue = Enum.Parse(PropertyEnumType, Value).ToString();
-                if (Value == EnumValue) EnumValue = Enum.GetNames (PropertyEnumType)[0]; //parsing failed, the Value was invalid
+                if (Value == EnumValue) EnumValue = Enum.GetNames(PropertyEnumType)[0]; //parsing failed, the Value was invalid
 
                 New = New.Remove(idx, Eidx - idx);
                 New = New.Insert(idx, EnumValue.ToString());
@@ -698,7 +700,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             {
 #if !IPHONE
 
-                DictionarySerializer<String, PLCConnectionConfiguration> ConnectionsDicSer = new DictionarySerializer<string, PLCConnectionConfiguration>();                   
+                DictionarySerializer<String, PLCConnectionConfiguration> ConnectionsDicSer = new DictionarySerializer<string, PLCConnectionConfiguration>();
                 Dictionary<String, PLCConnectionConfiguration> Connections = null;
 
                 if (File.Exists(ConfigurationPathAndFilename))
@@ -773,25 +775,25 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                 case LibNodaveConnectionTypes.MPI_über_Serial_Adapter_Andrews_Version_without_STX:
                     retVal = "MPI über seriell (Andrews Version)" + " (Port: " + ComPort + ", MPI: " + CpuMpi.ToString() + ")";
                     break;
-                case  LibNodaveConnectionTypes.MPI_über_Serial_Adapter_Step_7_Version:
+                case LibNodaveConnectionTypes.MPI_über_Serial_Adapter_Step_7_Version:
                     retVal = "MPI über seriell (Step7 Version)" + " (Port: " + ComPort + ", MPI: " + CpuMpi.ToString() + ")";
                     break;
-                case  LibNodaveConnectionTypes.MPI_über_Serial_Adapter_Adrews_Version_with_STX:
+                case LibNodaveConnectionTypes.MPI_über_Serial_Adapter_Adrews_Version_with_STX:
                     retVal = "MPI über seriell" + " (Port: " + ComPort + ", MPI: " + CpuMpi.ToString() + ")";
                     break;
-                case  LibNodaveConnectionTypes.PPI_über_Serial_Adapter:
+                case LibNodaveConnectionTypes.PPI_über_Serial_Adapter:
                     retVal = "PPI über seriell";
                     break;
-                case  LibNodaveConnectionTypes.AS_511:
+                case LibNodaveConnectionTypes.AS_511:
                     retVal = "AS 511";
                     break;
-                case  LibNodaveConnectionTypes.Use_Step7_DLL:
+                case LibNodaveConnectionTypes.Use_Step7_DLL:
                     retVal = "Step7 DLL" + " (" + EntryPoint + ")";
                     break;
-                case  LibNodaveConnectionTypes.ISO_over_TCP:
+                case LibNodaveConnectionTypes.ISO_over_TCP:
                     retVal = "ISO over TCP" + " (IP:" + CpuIP.ToString() + ",Rack:" + CpuRack.ToString() + ",Slot:" + CpuSlot.ToString() + ")";
                     break;
-                case  LibNodaveConnectionTypes.ISO_over_TCP_CP_243:
+                case LibNodaveConnectionTypes.ISO_over_TCP_CP_243:
                     retVal = "ISO over TCP (CP243)" + " (IP:" + CpuIP.ToString() + ",Rack:" + CpuRack.ToString() + ",Slot:" + CpuSlot.ToString() + ")";
                     break;
                 case LibNodaveConnectionTypes.Netlink_lite:
@@ -833,7 +835,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             StreamReader strm = new StreamReader(filename);
             string txt = strm.ReadToEnd();
             strm.Close();
-            return General.SerializeToString<PLCConnectionConfiguration>.DeSerialize(txt);              
+            return General.SerializeToString<PLCConnectionConfiguration>.DeSerialize(txt);
         }
     }
 

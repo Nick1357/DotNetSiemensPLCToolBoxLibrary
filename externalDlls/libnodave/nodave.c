@@ -1470,8 +1470,7 @@ int DECL2 daveBuildAndSendPDU(daveConnection * dc, PDU*p2, uc *pa, int psize, uc
 /*
 Get the PDU Data to a ByteBuffer
 */
-int DECL2 daveGetPDUData(daveConnection * dc, PDU*p2, uc* data, int* ldata, uc* param, int* lparam)
-{
+int DECL2 daveGetPDUData(daveConnection * dc, PDU*p2, uc* data, int* ldata, uc* param, int* lparam) {
 	int res = 0;
 	memcpy(data, p2->data, p2->dlen);
 	*ldata = p2->dlen;
@@ -1568,6 +1567,8 @@ int DECL2 daveReadSZL(daveConnection * dc, int ID, int index, void * buffer, int
 	da[2] = index / 0x100;
 	da[3] = index % 0x100;
 	res = daveBuildAndSendPDU(dc, &p2, pa, sizeof(pa), da, sizeof(da));
+	if (daveDebug & daveDebugErrorReporting)
+		LOG2("result of daveReadSZL(1): %d\n", res);
 	if (res != daveResOK) return res; 	// bugfix from Natalie Kather
 
 	len = 0;
@@ -1585,6 +1586,8 @@ int DECL2 daveReadSZL(daveConnection * dc, int ID, int index, void * buffer, int
 		pam[7] = pa7;
 		//		res=daveBuildAndSendPDU(dc, &p2,pam, sizeof(pam), NULL, sizeof(dam));
 		res = daveBuildAndSendPDU(dc, &p2, pam, sizeof(pam), NULL, 1);
+		if (daveDebug & daveDebugErrorReporting)
+			LOG2("result of daveReadSZL(2): %d\n", res);
 		if (res != daveResOK) return res; 	// bugfix from Natalie Kather
 	}
 
@@ -1603,8 +1606,7 @@ int DECL2 daveReadSZL(daveConnection * dc, int ID, int index, void * buffer, int
 	return res;
 }
 
-int DECL2 daveGetBlockInfo(daveConnection * dc, daveBlockInfo *dbi, uc type, int number)
-{
+int DECL2 daveGetBlockInfo(daveConnection * dc, daveBlockInfo *dbi, uc type, int number) {
 	int res;
 	uc pa[] = { 0, 1, 18, 4, 17, 67, 3, 0 };		/* param */
 	uc da[] = { '0', 0, '0', '0', '0', '1', '0', 'A' };
@@ -2003,8 +2005,7 @@ int DECL2 daveGetErrorOfResult(daveResultSet *rs, int number) {
 	return rs->results[number].error;
 }
 
-
-daveConnection * DECL2 daveNewExtendedConnection(daveInterface * di, void * Destination, int DestinationIsIP, int rack, int slot, int routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, void * routingDestination, int routingDestinationIsIP, int ConnectionType, int routingConnectionType) {
+daveConnection * DECL2 daveNewExtendedConnection(daveInterface * di, void * Destination, int DestinationIsIP, int rack, int slot, int routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, void * routingDestination, int routingDestinationIsIP, int ConnectionType, int routingConnectionType, int maxPDUlength) {
 
 	daveConnection * dc = (daveConnection *)calloc(1, sizeof(daveConnection));
 	if (dc) {
@@ -2031,7 +2032,6 @@ daveConnection * DECL2 daveNewExtendedConnection(daveInterface * di, void * Dest
 			dc->_Destination3 = 0;
 			dc->_Destination4 = 0;
 		}
-
 
 		dc->iface = di;
 
@@ -2065,9 +2065,8 @@ daveConnection * DECL2 daveNewExtendedConnection(daveInterface * di, void * Dest
 			dc->_routingDestination3 = 0;
 			dc->_routingDestination4 = 0;
 		}
-
 	}
-	return _daveNewConnection(dc);
+	return _daveNewConnection(dc, maxPDUlength);
 }
 
 /*
@@ -2087,13 +2086,14 @@ daveConnection * DECL2 daveNewConnection(daveInterface * di, int MPI, int rack, 
 		dc->ConnectionType = 1;
 		dc->routingConnectionType = 1;
 	}
-	return _daveNewConnection(dc);
+	return _daveNewConnection(dc, 0);
 }
 
-
-daveConnection * DECL2 _daveNewConnection(daveConnection * dc) {
+daveConnection * DECL2 _daveNewConnection(daveConnection * dc, int maxPDUlength) {
 	if (dc) {
-		dc->maxPDUlength = 960;				// assume an (unreal?) maximum
+		if(maxPDUlength<=0)
+			maxPDUlength = 960;
+		dc->maxPDUlength = maxPDUlength; //240;// 960;				// assume an (unreal?) maximum
 		dc->connectionNumber = dc->iface->nextConnection;	// 1/10/05 trying Andrew's patch
 
 		dc->PDUnumber = 0xFFFE;			// just a start value; // test!
@@ -6956,6 +6956,8 @@ int DECL2 davePutNCProgram(daveConnection *dc, char *filename, char *pathname, c
 			do_down_pa[7] = seq_num;
 			/* Max. Länge in datablock = PDUsize - hlen - plen - dheader */
 			max_data_len = daveGetMaxPDULen(dc) - 10 - 12 - 6;
+			if (daveDebug & daveDebugAll)
+				LOG2("davePutNCProgram: max_data_len=%d, Neue länge für download\n", max_data_len);
 			do_down_da[6] = '/0';
 			sprintf(do_down_da + 6, "%08d%s    ;$PATH=%s\n",
 				length + strlen(pathname) + 8,

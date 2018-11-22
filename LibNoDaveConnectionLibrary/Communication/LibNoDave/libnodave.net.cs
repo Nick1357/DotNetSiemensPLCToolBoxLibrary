@@ -542,6 +542,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication.LibNoDave
 
         public class daveConnection : pseudoPointer, IDaveConnection
         {
+            #region daveNewConnection
 #if !IPHONE
             [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveNewConnection")]
 #else
@@ -564,13 +565,15 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication.LibNoDave
                 else
                     pointer = daveNewConnection32(di.pointer, MPI, rack, slot);
             }
+            #endregion
 
+            #region daveNewExtendedConnection
 #if !IPHONE
             [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveNewExtendedConnection")]
 #else
             [DllImport("__Internal", EntryPoint = "daveNewExtendedConnection")]
 #endif
-            protected static extern IntPtr daveNewExtendedConnection64(IntPtr di, byte[] destination, int DestinationIsIP, int rack, int slot, int routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, byte[] routingDestination, int routingDestinationIsIP, int ConnectionType, int routingConnectionType);
+            protected static extern IntPtr daveNewExtendedConnection64(IntPtr di, byte[] destination, int DestinationIsIP, int rack, int slot, int routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, byte[] routingDestination, int routingDestinationIsIP, int ConnectionType, int routingConnectionType, int maxPDUlength);
 
 
 #if !IPHONE
@@ -578,10 +581,10 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication.LibNoDave
 #else
             [DllImport("__Internal", EntryPoint = "daveNewExtendedConnection")]
 #endif
-            protected static extern IntPtr daveNewExtendedConnection32(IntPtr di, byte[] destination, int DestinationIsIP, int rack, int slot, int routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, byte[] routingDestination, int routingDestinationIsIP, int ConnectionType, int routingConnectionType);
+            protected static extern IntPtr daveNewExtendedConnection32(IntPtr di, byte[] destination, int DestinationIsIP, int rack, int slot, int routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, byte[] routingDestination, int routingDestinationIsIP, int ConnectionType, int routingConnectionType, int maxPDUlength);
 
 
-            public daveConnection(daveInterface di, int MPI, string IP, bool DestinationIsIP, int rack, int slot, bool routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, string routingDestination, int PLCConnectionType, int routingPLCConnectionType)
+            public daveConnection(daveInterface di, int MPI, string IP, bool DestinationIsIP, int rack, int slot, bool routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, string routingDestination, int PLCConnectionType, int routingPLCConnectionType, int maxPDUlength)
             {
                 string[] ip = IP.Split('.');
                 byte[] myDestination;
@@ -614,11 +617,13 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication.LibNoDave
                         myRoutingDestination = new byte[] { (byte)Convert.ToInt32(rip[0]), (byte)Convert.ToInt32(rip[1]), (byte)Convert.ToInt32(rip[2]), (byte)Convert.ToInt32(rip[3]) };
                 }
                 if (IntPtr.Size == 8)
-                    pointer = daveNewExtendedConnection64(di.pointer, myDestination, myDestinationIsIP, rack, slot, Convert.ToInt32(routing), routingSubnetFirst, routingSubnetSecond, routingRack, routingSlot, myRoutingDestination, routingDestinationIsIP, PLCConnectionType, routingPLCConnectionType);
+                    pointer = daveNewExtendedConnection64(di.pointer, myDestination, myDestinationIsIP, rack, slot, Convert.ToInt32(routing), routingSubnetFirst, routingSubnetSecond, routingRack, routingSlot, myRoutingDestination, routingDestinationIsIP, PLCConnectionType, routingPLCConnectionType, maxPDUlength);
                 else
-                    pointer = daveNewExtendedConnection32(di.pointer, myDestination, myDestinationIsIP, rack, slot, Convert.ToInt32(routing), routingSubnetFirst, routingSubnetSecond, routingRack, routingSlot, myRoutingDestination, routingDestinationIsIP, PLCConnectionType, routingPLCConnectionType);
+                    pointer = daveNewExtendedConnection32(di.pointer, myDestination, myDestinationIsIP, rack, slot, Convert.ToInt32(routing), routingSubnetFirst, routingSubnetSecond, routingRack, routingSlot, myRoutingDestination, routingDestinationIsIP, PLCConnectionType, routingPLCConnectionType, maxPDUlength);
             }
+            #endregion
 
+            #region daveConnectPLC
             /* This wa here to test inheritance
                 ~daveConnection(){
                     Console.WriteLine("~daveConnection()"+pointer);
@@ -646,7 +651,9 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication.LibNoDave
                 else
                     return daveConnectPLC32(pointer);
             }
+            #endregion
 
+            #region daveDisconnectPLC
 #if !IPHONE
             [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveDisconnectPLC")]
 #else
@@ -666,6 +673,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication.LibNoDave
                     return daveDisconnectPLC64(pointer);
                 return daveDisconnectPLC32(pointer);
             }
+            #endregion
 
 #if !IPHONE
             [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveReadBytes")]

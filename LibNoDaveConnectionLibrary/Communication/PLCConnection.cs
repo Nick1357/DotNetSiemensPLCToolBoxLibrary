@@ -376,7 +376,8 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         _configuration.RoutingSubnet1, _configuration.RoutingSubnet2,
                         _configuration.RoutingDestinationRack, _configuration.RoutingDestinationSlot,
                         _configuration.RoutingDestination, (int)_configuration.PLCConnectionType,
-                        (int)_configuration.RoutingPLCConnectionType);
+                        (int)_configuration.RoutingPLCConnectionType,
+                        _configuration.MaxPDUlength);
                 }
                 else
                 {
@@ -1500,10 +1501,14 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                 if (_dc != null)
                 {
                     SZLData retVal = new SZLData();
-
+#if daveDebug
+                    libnodave.daveSetDebug(0x1ffff);
+#endif
                     byte[] buffer = new byte[65536];
                     int ret = _dc.readSZL(SZLNummer, Index, buffer);
-
+#if daveDebug
+                    libnodave.daveSetDebug(0);
+#endif
                     //SZL:
                     //SZL-ID(WORD) 0,1
                     //INDEX(WORD) 2,3
@@ -3864,6 +3869,10 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             if (F_XFER)
                 PI_Service("_N_F_XFER", new string[] { "P01", fullFileName });
 
+#if daveDebug
+            libnodave.daveSetDebug(0x1ffff);
+#endif
+
             int res = _dc.initUploadNC(file, ref id);
             if (res != 0)
                 throw new Exception("UploadFromNC: " + res);
@@ -3881,6 +3890,11 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             } while (more != 0);
 
             res = _dc.endUploadNC(id);
+
+#if daveDebug
+            libnodave.daveSetDebug(0);
+#endif
+
             if (res != 0)
                 throw new Exception("UploadFromNC: " + res);
 

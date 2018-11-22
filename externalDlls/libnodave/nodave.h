@@ -527,13 +527,14 @@ extern "C" {
 	/*
 		Setup a new Extended Connection (or a TCPIP Connection to
 		*/
+	// Die NC schlägt eine PDU Größe von 960 von, arbeitet intern jedoch teilweiße mit der S7 PDU Größe von 240 z.B bei Drive Daten oder Datei Transfer über X150 //JEger
 	EXPORTSPEC
-		daveConnection * DECL2 daveNewExtendedConnection(daveInterface * di, void * Destination, int DestinationIsIP, int rack, int slot, int routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, void * routingDestination, int routingDestinationIsIP, int ConnectionType, int routingConnectionType);
-
+		daveConnection * DECL2 daveNewExtendedConnection(daveInterface * di, void * Destination, int DestinationIsIP, int rack, int slot, int routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, void * routingDestination, int routingDestinationIsIP, int ConnectionType, int routingConnectionType, int maxPDUlength);
+		
 	/*
 		Setup a new connection structure using an daveConnection Structure
 		*/
-	daveConnection * DECL2 _daveNewConnection(daveConnection * dc);
+	daveConnection * DECL2 _daveNewConnection(daveConnection * dc, int maxPDUlength);
 
 	typedef struct {
 		uc type[2];
