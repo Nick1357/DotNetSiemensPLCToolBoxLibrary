@@ -116,6 +116,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             _connected = true;
             _configuration = config;
             _dc = unittestConnection;
+            AutoDisconnect = true;
         }
 
         /// <summary>
@@ -125,6 +126,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
         public PLCConnection(PLCConnectionConfiguration akConfig)
         {
             _configuration = akConfig;
+            AutoDisconnect = true;
         }
 
 
@@ -3799,7 +3801,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             libnodave.resultSet rs = new libnodave.resultSet();
             int res = _dc.PI_StartNC(piservice, param, param.Length);
 
-            if (res == -1025)
+            if (AutoDisconnect && res == -1025)
             {
                 this.Disconnect();
                 throw new System.Runtime.InteropServices.ExternalException("PI_Service: " + res);
@@ -4058,6 +4060,8 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             string path = fullFileName.Substring(0, fullFileName.LastIndexOf('/') > 0 ? fullFileName.LastIndexOf('/') : fullFileName.Length);
 
             byte[] buffer = System.Text.Encoding.Default.GetBytes(data);
+            if (string.IsNullOrEmpty(ts))
+                ts = DateTime.Now.ToString("yyMMddHHmmss");
             int res = _dc.davePutNCProgram(filename, path, ts, buffer, buffer.Length);
             if (res != 0)
                 throw new Exception("DownloadToNC: " + res);

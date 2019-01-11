@@ -223,7 +223,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                 this.Bausteintyp = (byte)nckTag.NckModule;
                 this.ZEILENANZAHL = (byte)nckTag.NckLinecount;
                 this.Typ = GetNckType(nckTag.TagDataType);
-                this.Laenge = (byte)nckTag._internalGetSize();
+                this.Laenge = (UInt16)nckTag._internalGetSize();
             }
         }
 
@@ -248,7 +248,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             this.Bausteintyp = (byte)bausteinTyp;
             this.ZEILENANZAHL = (byte)zeilenAnzahl;
             this.Typ = (byte)typ;
-            this.Laenge = (byte)laenge;
+            this.Laenge = (UInt16)laenge;
         }
 
         #region Fields
@@ -259,7 +259,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
         private byte bausteintyp;
         private byte zeilenanzahl;
         private byte typ;
-        private byte laenge;
+        private UInt16 laenge;
         #endregion
 
         #region Properties
@@ -335,9 +335,9 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
 #if !IPHONE
         [Scm.CategoryAttribute("PlcNckTag")]
-        [Scm.TypeConverter(typeof(ByteHexTypeConverter))]
+        [Scm.TypeConverter(typeof(UInt16HexTypeConverter))]
 #endif
-        public byte Laenge
+        public UInt16 Laenge
         {
             get { return laenge; }
             set { laenge = value; }
@@ -418,7 +418,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                 ret.Bausteintyp = (byte)nckTag.NckModule;
                 ret.ZEILENANZAHL = (byte)nckTag.NckLinecount;
                 ret.Typ = GetNckType(nckTag.TagDataType);
-                ret.Laenge = (byte)nckTag._internalGetSize();
+                ret.Laenge = (UInt16)nckTag._internalGetSize();
             }
             return ret;
         }
