@@ -3944,7 +3944,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             string filename = fullFileName.Remove(0, fullFileName.LastIndexOf('/') > 0 ? fullFileName.LastIndexOf('/') + 1 : 0);
 
             if (size == 0)
-                size = 0x6fffffff; //UploadNcFileSize(fullFileName, F_XFER);
+                size = IntPtr.Size == 8 ? 0x6fffffff : 0x5fffffff; //UploadNcFileSize(fullFileName, F_XFER);
             if (F_XFER)
                 PI_Service("_N_F_XFER", new string[] { "P01", fullFileName });
 
@@ -3975,7 +3975,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             string filename = fullFileName.Remove(0, fullFileName.LastIndexOf('/') > 0 ? fullFileName.LastIndexOf('/') + 1 : 0);
 
             if (size == 0)
-                size = 0x6fffffff; //UploadNcFileSize(fullFileName, F_XFER);
+                size = IntPtr.Size == 8 ? 0x6fffffff : 0x5fffffff; //UploadNcFileSize(fullFileName, F_XFER);
             if (F_XFER)
                 PI_Service("_N_F_XFER", new string[] { "P01", fullFileName });
 

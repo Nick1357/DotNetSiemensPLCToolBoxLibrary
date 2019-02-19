@@ -164,7 +164,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     if (string.IsNullOrWhiteSpace((string)value))
                         return null;
 
-                    string[] sAr = ((string)value).Split(',');
+                    string[] sAr = ((string)value).Split('=')[0].Split(',');
                     if (sAr.Length == 8)
                     {
                         return new NC_Var(HexParse(sAr[0], culture), HexParse(sAr[1], culture), HexParse(sAr[2], culture), HexParse(sAr[3], culture), HexParse(sAr[4], culture), HexParse(sAr[5], culture), HexParse(sAr[6], culture), HexParse(sAr[7], culture)).GetNckTag();
