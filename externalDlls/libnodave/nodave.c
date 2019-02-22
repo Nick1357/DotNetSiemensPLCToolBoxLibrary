@@ -6641,6 +6641,7 @@ int DECL2 daveGetNcFile(daveConnection *dc, const char *filename, char *buffer, 
 	}
 	memcpy(buffer + tot_len, p2.data + 6, part_len);
 	tot_len += part_len;
+	unackcount++;
 	/* Wenn ab hier noch nicht alles gelesen, dann werden bis zu 20 Telegramme gesendet die
 	 * nicht bestätigt werden müssen. Dann gibt es ein ack usw. usf.
 	 */
@@ -6787,6 +6788,7 @@ int DECL2 daveGetNcFileSize(daveConnection *dc, const char *filename, int *lengt
 		return -3;
 	}
 	tot_len += part_len;
+	unackcount++;
 	/* Wenn ab hier noch nicht alles gelesen, dann werden bis zu 20 Telegramme gesendet die
 	 * nicht bestätigt werden müssen. Dann gibt es ein ack usw. usf.
 	 */

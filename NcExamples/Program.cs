@@ -112,7 +112,7 @@ namespace NcExamples
 
                     bool F_XFER = true; // false for system ini files
                     string NcPath = "/_N_CST_DIR/_N_PROG_EVENT_SPF";
-                    string sEditFile = F_XFER ? con.UploadNcFile(NcPath, 0, F_XFER) : con.UploadFromNC(NcPath, F_XFER);
+                    string sEditFile = con.UploadNcFile(NcPath, F_XFER);
                 }
                 catch (Exception ex)
                 {

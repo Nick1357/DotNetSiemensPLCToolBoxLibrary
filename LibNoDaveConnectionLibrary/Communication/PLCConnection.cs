@@ -3965,6 +3965,17 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
         /// Load complete file from NC
         /// </summary>
         /// <param name="fullFileName">full filename inc. path</param>
+        /// <param name="F_XFER">Start PI-Service F_XFER before upload</param>
+        /// <returns></returns>
+        public string UploadNcFile(string fullFileName, bool F_XFER = true)
+        {
+            return UploadNcFile(fullFileName, 0, F_XFER);
+        }
+
+        /// <summary>
+        /// Load complete file from NC
+        /// </summary>
+        /// <param name="fullFileName">full filename inc. path</param>
         /// <param name="size">size of the file (buffer)</param>
         /// <param name="F_XFER">Start PI-Service F_XFER before upload</param>
         /// <returns></returns>
