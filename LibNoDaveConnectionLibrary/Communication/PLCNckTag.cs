@@ -283,6 +283,16 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             set { bereich_u_einheit = value; }
         }
 
+        private byte Bereich
+        {
+            get { return (byte)(bereich_u_einheit >> 5); }
+        }
+
+        private byte Einheit
+        {
+            get { return (byte)(bereich_u_einheit & 0x1f); }
+        }
+
 #if !IPHONE
         [Scm.CategoryAttribute("PlcNckTag")]
         [Scm.TypeConverter(typeof(UInt16HexTypeConverter))]
@@ -455,6 +465,17 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             }
         }
 
+        public bool IsEqual(NC_Var ncVar, bool ignoreUnit = false)
+        {
+            return this.bausteintyp == ncVar.bausteintyp &&
+                this.laenge == ncVar.laenge &&
+                this.spalte == ncVar.spalte &&
+                this.syntaxId == ncVar.syntaxId &&
+                this.typ == ncVar.typ &&
+                this.zeile == ncVar.zeile &&
+                this.zeilenanzahl == ncVar.zeilenanzahl &&
+                (ignoreUnit ? this.Bereich == ncVar.Bereich : this.bereich_u_einheit == ncVar.bereich_u_einheit);
+        }
 
 #if !IPHONE
         public class ByteHexTypeConverter : Scm.TypeConverter
