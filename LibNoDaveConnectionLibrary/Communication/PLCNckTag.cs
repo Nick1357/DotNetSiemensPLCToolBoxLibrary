@@ -283,12 +283,22 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             set { bereich_u_einheit = value; }
         }
 
-        private byte Bereich
+#if !IPHONE
+        [System.Xml.Serialization.XmlIgnore]
+        [Scm.Browsable(false), Scm.EditorBrowsable(Scm.EditorBrowsableState.Never)]
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+        public NCK_Area Bereich
         {
-            get { return (byte)(bereich_u_einheit >> 5); }
+            get { return (NCK_Area)(bereich_u_einheit >> 5); }
         }
 
-        private byte Einheit
+#if !IPHONE
+        [System.Xml.Serialization.XmlIgnore]
+        [Scm.Browsable(false), Scm.EditorBrowsable(Scm.EditorBrowsableState.Never)]
+        [System.Diagnostics.DebuggerBrowsable(System.Diagnostics.DebuggerBrowsableState.Never)]
+#endif
+        public byte Einheit
         {
             get { return (byte)(bereich_u_einheit & 0x1f); }
         }

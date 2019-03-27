@@ -106,6 +106,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             _configuration = new PLCConnectionConfiguration(name);
 
             _connectionTargetPlcType = ConnectionTargetPLCType.S7;
+            AutoDisconnect = true;
         }
 
         /// <summary>
