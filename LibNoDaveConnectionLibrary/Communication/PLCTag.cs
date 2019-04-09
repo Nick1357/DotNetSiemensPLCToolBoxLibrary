@@ -1478,12 +1478,6 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             if (_internalGetSize() != 2)
                                 this.TagDataType = TagDataType.Int;
                         }
-                        else if (myPlcAddress[0].Contains("DBB"))
-                        {
-                            ArraySize = 1;
-                            if (this.TagDataType == TagDataType.Bool || this._internalGetSize() != 1)
-                                this.TagDataType = TagDataType.Byte;
-                        }
                         else if (myPlcAddress[0].Contains("D"))
                         {
                             if (this.TagDataType == TagDataType.String || this.TagDataType == TagDataType.CharArray || this.TagDataType == TagDataType.ByteArray)
