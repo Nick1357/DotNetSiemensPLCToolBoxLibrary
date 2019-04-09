@@ -1399,7 +1399,8 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                 }
                 else
                 {
-                    string[] myPlcAddress = plcAddress.ToUpper().Trim().Replace(" ", "").Split('.');
+                    string conversionType = plcAddress.Contains(":") ? plcAddress.Split(':')[1].Trim().ToUpper() : string.Empty;
+                    string[] myPlcAddress = plcAddress.Split(':')[0].ToUpper().Trim().Replace(" ", "").Split('.');
                     if (myPlcAddress.Length >= 2 && (myPlcAddress[0].Contains("DB") || myPlcAddress[0].Contains("DI")))
                     {
                         this.TagDataSource = MemoryArea.Datablock;
@@ -1492,6 +1493,15 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             if (_internalGetSize() != 4)
                                 this.TagDataType = TagDataType.Dint;
                         }
+                        else if (myPlcAddress[0].Contains("R"))
+                        {
+                            if (this.TagDataType == TagDataType.String || this.TagDataType == TagDataType.CharArray || this.TagDataType == TagDataType.ByteArray)
+                                ArraySize = 4;
+                            else
+                                ArraySize = 1;
+                            if (_internalGetSize() != 4)
+                                this.TagDataType = TagDataType.Float;
+                        }
                         else if (myPlcAddress[0].Contains("L"))
                         {
                             if (this.TagDataType == TagDataType.String || this.TagDataType == TagDataType.CharArray || this.TagDataType == TagDataType.ByteArray)
@@ -1537,6 +1547,25 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
                         if (this.TagDataType == TagDataType.String)
                             ArraySize -= 2;
+                    }
+
+                    switch (conversionType)
+                    {
+                        case "WORD":
+                            this.TagDataType = TagDataType.Word;
+                            break;
+                        case "INT":
+                            this.TagDataType = TagDataType.Int;
+                            break;
+                        case "DWORD":
+                            this.TagDataType = TagDataType.Dword;
+                            break;
+                        case "INT32":
+                            this.TagDataType = TagDataType.Dint;
+                            break;
+                        case "REAL":
+                            this.TagDataType = TagDataType.Float;
+                            break;
                     }
                 }
             }
