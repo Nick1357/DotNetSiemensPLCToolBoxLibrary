@@ -1545,6 +1545,18 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
                     switch (conversionType)
                     {
+                        case "DATE":
+                            this.TagDataType = TagDataType.Date;
+                            break;
+                        case "TIME":
+                            this.TagDataType = TagDataType.Time;
+                            break;
+                        case "S5TIME":
+                            this.TagDataType = TagDataType.S5Time;
+                            break;
+                        case "TIME_OF_DAY":
+                            this.TagDataType = TagDataType.TimeOfDay;
+                            break;
                         case "WORD":
                             this.TagDataType = TagDataType.Word;
                             break;
