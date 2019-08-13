@@ -107,6 +107,13 @@
     <Compile Include="Communication\S7_xxx\SZLDatasets.cs" />
     <Compile Include="DataTypes\Blocks\IBlock.cs" />
     <Compile Include="DataTypes\Blocks\IProjectBlockInfo.cs" />
+    <Compile Include="DataTypes\Blocks\Step7V11\ITIAConstant.cs" />
+    <Compile Include="DataTypes\Blocks\Step7V11\ITIATag.cs" />
+    <Compile Include="DataTypes\Blocks\Step7V11\ITIAForceTable.cs" />
+    <Compile Include="DataTypes\Blocks\Step7V11\ITIAWatchTable.cs" />
+    <Compile Include="DataTypes\Blocks\Step7V11\ITIAVarTab.cs" />
+    <Compile Include="DataTypes\Blocks\Step7V11\ITIAWatchAndForceTablesFolder.cs" />
+    <Compile Include="DataTypes\Blocks\Step7V11\ITIAVarTabFolder.cs" />
     <Compile Include="DataTypes\Blocks\TiaAndSTep7DataBlockRow.cs" />
     <Compile Include="DataTypes\Blocks\Step7V5\S7AnyPointer.cs" />
     <Compile Include="DataTypes\BitByteAddress.cs" />
@@ -293,6 +300,7 @@
     <Compile Include="DBF\ParseDBF.cs" />
     <Compile Include="DataTypes\Blocks\Step7V5\S7VATRow.cs" />
     <Compile Include="PLCs\S7_xxx\MC7\StaticDataConverter.cs" />
+    <Compile Include="Projectfiles\ProjectType.cs" />
     <Compile Include="Projectfiles\SelectProjectPartMultiForm.cs">
       <SubType>Form</SubType>
     </Compile>

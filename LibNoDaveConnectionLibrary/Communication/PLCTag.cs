@@ -199,6 +199,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
         /// <param name="type">The data type to be read from the Controller</param>
         public PLCTag(string address, TagDataType type)
         {
+            this.TagDataType = type;
             this.ChangeAddressFromString(address);
             this.TagDataType = type;
         }
@@ -1381,12 +1382,21 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             break;
                     }
 
-                    var baseS = _internalGetBaseTypeSize();
-                    if (baseS > 0)
-                        _ArraySize = _ArraySize / baseS;
-                    else
+                    if (this.TagDataType == TagDataType.Bool)
+                    {
                         _ArraySize *= 8;
-
+                    }
+                    else if (this.TagDataType == TagDataType.String)
+                    { }
+                    else
+                    {
+                        var baseS = _internalGetBaseTypeSize();
+                        if (baseS > 0)
+                            _ArraySize = _ArraySize / baseS;
+                        else
+                            _ArraySize *= 8;
+                    }
+                    
                     ArraySize = Convert.ToInt32(_ArraySize * tsize);
 
                     //if (this.TagDataType != TagDataType.ByteArray && this.TagDataType != TagDataType.CharArray && this.TagDataType != TagDataType.String && this.TagDataType != TagDataType.DateTime)
@@ -1454,7 +1464,17 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         }
                         this.ByteAddress = Convert.ToInt32(myPlcAddress[1].Replace("DBW", "").Replace("DBD", "").Replace("DBR", "").Replace("DBX", "").Replace("DBB", "").Replace("DBL", "").Trim());
                     }
-                    else
+                    //if (this.TagDataType != TagDataType.ByteArray && this.TagDataType != TagDataType.CharArray && this.TagDataType != TagDataType.String && this.TagDataType != TagDataType.DateTime)
+                    //    this.TagDataType = TagDataType.ByteArray;
+                    //if (ArraySize != 8 && this.TagDataType == TagDataType.DateTime)
+                    //    this.TagDataType = TagDataType.ByteArray;
+
+
+                }
+                else
+                {
+                    string[] myPlcAddress = plcAddress.ToUpper().Trim().Replace(" ", "").Split('.');
+                    if (myPlcAddress.Length >= 2 && (myPlcAddress[0].Contains("DB") || myPlcAddress[0].Contains("DI")))
                     {
                         if (myPlcAddress[0].Contains("PE") || myPlcAddress[0].Contains("PI"))
                             this.TagDataSource = MemoryArea.Periphery;
@@ -1530,7 +1550,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             ArraySize = 1;
                             this.TagDataType = TagDataType.Int;
                         }
-                        else
+                        else if (myPlcAddress[1].Contains("DBB"))
                         {
                             ArraySize = 1;
                             if (_internalGetSize() != 1)
@@ -1937,10 +1957,12 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                                 int maxsize = (int)buff[startpos];
                                 int size = (int)buff[startpos + 1];
 
-                                if (ArraySize == 1 && ArraySize != maxsize)
-                                    ArraySize = Math.Max(ArraySize, maxsize);
-                                else
-                                    _setValueProp = Encoding.Default.GetString(buff, startpos + 2, size);
+                                if (size > maxsize)
+                                    size = maxsize;
+                                if (size > ArraySize)
+                                    size = ArraySize;
+
+                                _setValueProp = Encoding.Default.GetString(buff, startpos + 2, size);
                             }
                             else
                                 _setValueProp = Encoding.Default.GetString(buff, startpos, Math.Min(buff.Length - startpos, ArraySize)).Split('\0')[0];

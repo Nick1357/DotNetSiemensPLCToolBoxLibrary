@@ -153,8 +153,12 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
         private bool _netlinkReseted = false;
 
+        public event Action<PLCConnection> PlcDisconnected;
+        public event Action<PLCConnection> PlcConnected;
+
         //LibNoDave used types
         private libnodave.daveOSserialType _fds;
+        private IntPtr? _socketPtr;
         private libnodave.daveInterface _di = null; //dave Interface
         public IDaveConnection _dc = null;
         private Func<int, string> _errorCodeConverter;
@@ -172,6 +176,17 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
         public void socket_Thread()
         {
+            if (Logger != null)
+                Logger("socket thread created");
+
+            if (_socketPtr.HasValue)
+            {
+                if (Logger != null)
+                    Logger("socket thread - close old socket :" + _socketPtr.ToString());
+                libnodave.closeSocket(_socketPtr.Value);
+                _socketPtr = null;
+            }
+
             _fds.rfd = new IntPtr(-999);
             string ip = null;
             try
@@ -192,10 +207,15 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
             //TcpClient sock = new TcpClient(ip, _configuration.Port);
             //_fds.rfd = sock.Client.Handle;
 
+            if (Logger != null)
+                Logger("socket thread try to connect");
             if (ip != null)
                 _fds.rfd = libnodave.openSocket(_configuration.Port, ip);
             else
                 _fds.rfd = libnodave.openSocket(_configuration.Port, _configuration.CpuIP);
+            if (Logger != null)
+                Logger("socket thread - got socket pointer:" + _socketPtr.ToString());
+            _socketPtr = _fds.rfd;
         }
 
         #region General
@@ -407,6 +427,11 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     throw new PLCException("Error: (Connection) (Code: " + ret.ToString() + ") " + _errorCodeConverter(ret), ret);
 
                 Connected = true;
+
+                if (Logger != null)
+                    Logger("PLC Connection created");
+
+                PlcConnected?.Invoke(this);
                 #endregion
             }
         }
@@ -417,6 +442,9 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
         /// </summary>
         void CheckConnection()
         {
+            if (Connected && _dc == null)
+                Connected = false;
+
             if (Connected)
                 return;
 
@@ -432,6 +460,12 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
         public void Disconnect()
         {
             Dispose();
+            PlcDisconnected?.Invoke(this);
+        }
+
+        private void autoDisconnect()
+        {
+            Disconnect();
         }
 
         /// <summary>
@@ -1020,7 +1054,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     {
                         if (Logger != null)
                             Logger("(1) Auto Disconnect cause of :" + libnodave.daveStrerror(ret));
-                        this.Disconnect();
+                        this.autoDisconnect();
                         return DataTypes.PLCState.Unkown; ;
                     }
 
@@ -2902,7 +2936,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             {
                                 if (Logger != null)
                                     Logger("(2) Auto Disconnect cause of :" + libnodave.daveStrerror(res));
-                                this.Disconnect();
+                                this.autoDisconnect();
                                 return;
                             }
                             else if (res != 0)
@@ -3027,7 +3061,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         {
                             if (Logger != null)
                                 Logger("(3) Auto Disconnect cause of :" + libnodave.daveStrerror(res));
-                            this.Disconnect();
+                            this.autoDisconnect();
                             return;
                         }
                         else if (res != 0 && res != 10)
@@ -3040,11 +3074,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         {
                             byte[] myBuff = new byte[ /* gesReadSize */readenSizes[akVar] + 1];
 
-                            lock (lockObj)
-                            {
-                                res = _dc.useResultBuffer(rs, akVar, myBuff);
-                            }
-
+                            res = _dc.useResultBuffer(rs, akVar, myBuff);
                             if (res == 10 || res == 5)
                             {
                                 NotExistedValue.Add(true);
@@ -3357,7 +3387,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     {
                         if (Logger != null)
                             Logger("(4) Auto Disconnect cause of :" + libnodave.daveStrerror(res));
-                        this.Disconnect();
+                        this.autoDisconnect();
                         return;
                     }
                     else if (res == 5 || res == 10)
@@ -3450,7 +3480,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     {
                         if (Logger != null)
                             Logger("(5) Auto Disconnect cause of :" + libnodave.daveStrerror(res));
-                        this.Disconnect();
+                        this.autoDisconnect();
                         return;
                     }
                     else if (res != 0)
@@ -3765,7 +3795,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             {
                                 if (Logger != null)
                                     Logger("(6) Auto Disconnect cause of :" + libnodave.daveStrerror(res));
-                                this.Disconnect();
+                                this.autoDisconnect();
                                 return;
                             }
                             anzWriteVar = 0;
@@ -3786,7 +3816,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         {
                             if (Logger != null)
                                 Logger("(7) Auto Disconnect cause of :" + libnodave.daveStrerror(res));
-                            this.Disconnect();
+                            this.autoDisconnect();
                             return;
                         }
                     }
@@ -3804,7 +3834,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
             if (AutoDisconnect && res == -1025)
             {
-                this.Disconnect();
+                this.autoDisconnect();
                 throw new System.Runtime.InteropServices.ExternalException("PI_Service: " + res);
             }
             if (res != 0)
@@ -4314,6 +4344,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         case LibNodaveConnectionTypes.Netlink_lite_PPI:
                         case LibNodaveConnectionTypes.Netlink_Pro:
                             libnodave.closeSocket(_fds.rfd);
+                            _socketPtr = null;
                             break;
                     }
             }

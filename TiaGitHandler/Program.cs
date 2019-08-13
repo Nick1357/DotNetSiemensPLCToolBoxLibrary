@@ -4,11 +4,19 @@ using System.IO;
 using System.Linq;
 using System.Security;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using DotNetSiemensPLCToolBoxLibrary.DataTypes;
+using DotNetSiemensPLCToolBoxLibrary.DataTypes.Blocks.Step7V11;
 using DotNetSiemensPLCToolBoxLibrary.DataTypes.Projectfolders;
+using DotNetSiemensPLCToolBoxLibrary.General;
 using DotNetSiemensPLCToolBoxLibrary.Projectfiles;
+using TiaGitHandler.Properties;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.Forms.MessageBox;
+using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
 
 namespace TiaGitHandler
 {
@@ -16,50 +24,111 @@ namespace TiaGitHandler
     {
         private static string folder = "";
 
+        private static ProjectType _projectType = ProjectType.Tia15_1;
+
+        private static bool resetSetpoints = true;
+        private static bool removeCodeFromXml = true;
+        private static bool removeAllBlanks = false;
+        private static bool removeOnlyOneBlank = true;
+        private static bool removeNoBlanks = false;
+
         [STAThread]
         static void Main(string[] args)
         {
 
             string file = "";
             string exportPath = "";
-            string user = null;
-            string password = null;
+            string user = Settings.Default.DefaultUser;
+            string password = Settings.Default.DefaultPassword;
+
+
+            Project prj = null;
 
             if (args.Count() < 1)
             {
-                OpenFileDialog op = new OpenFileDialog();
-                op.Filter = "TIA-Portal Project|*.ap13;*.ap14;*.ap15";
-                op.CheckFileExists = false;
-                op.ValidateNames = false;
-                var ret = op.ShowDialog();
-                if (ret == DialogResult.OK)
+                Application app = new Application();
+                var ask = new AskOpen();
+                app.Run(ask);
+                var res = ask.Result;
+                resetSetpoints = ask.chkResetSetpoints.IsChecked == true;
+                removeCodeFromXml = ask.chkRemoveCode.IsChecked == true;
+                removeAllBlanks = ask.rbRemoveAllBlanks.IsChecked == true;
+                removeOnlyOneBlank = ask.rbRemoveOnlyOneBlank.IsChecked == true;
+                removeNoBlanks = ask.rbRemoveNoBlanks.IsChecked == true;
+
+                if (object.Equals(res, false))
                 {
-                    file = op.FileName;
+                    OpenFileDialog op = new OpenFileDialog();
+                    op.Filter = "TIA-Portal Project|*.ap13;*.ap14;*.ap15;*.ap15_1";
+                    op.CheckFileExists = false;
+                    op.ValidateNames = false;
+                    var ret = op.ShowDialog();
+                    if (ret == true)
+                    {
+                        file = op.FileName;
+                    }
+                    else
+                    {
+                        Console.WriteLine("Bitte S7 projekt als Parameter angeben!");
+                        return;
+                    }
+
+                    if (Path.GetExtension(file) == ".ap15_1")
+                    {
+                        if (InputBox.Show("Credentials", "Enter Username (or cancel if not used)", ref user) !=
+                            DialogResult.Cancel)
+                        {
+                            if (InputBox.Show("Credentials", "Enter Password", ref password) != DialogResult.Cancel)
+                            {
+
+                            }
+                            else
+                            {
+                                user = "";
+                                password = "";
+                            }
+                        }
+                        else
+                        {
+                            user = "";
+                            password = "";
+                        }
+                    }
+
+                    exportPath = Path.GetDirectoryName(file);
+                    exportPath = Path.GetFullPath(Path.Combine(exportPath, "..\\Export"));
+
+                }
+                else if (res != null)
+                {
+                    var ver = ask.Result as string;
+                    prj = Projects.AttachProject(ver);
+
+                    exportPath = Path.GetDirectoryName(prj.ProjectFile);
+                    exportPath = Path.GetFullPath(Path.Combine(exportPath, "..\\Export"));
                 }
                 else
                 {
-                    Console.WriteLine("Bitte S7 projekt als Parameter angeben!");
-                    return;
+                    Environment.Exit(0);
                 }
 
-                exportPath = Path.GetDirectoryName(file);
-                exportPath = Path.GetFullPath(Path.Combine(exportPath, "..\\Export"));
                 if (Directory.Exists(exportPath))
                 {
                     if (
-                        MessageBox.Show(exportPath + " wird gelöscht. Möchten Sie fortfahren?", "Sicherheitsabfrage",
+                        MessageBox.Show(exportPath + " wird gelöscht. Möchten Sie fortfahren?",
+                            "Sicherheitsabfrage",
                             MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
-                        Directory.Delete(exportPath, true);
+                        DeleteDirectory(exportPath);
                     }
                     else
                     {
                         Environment.Exit(-1);
                     }
-                    
+
                 }
+
                 Directory.CreateDirectory(exportPath);
-                
             }
             else
             {
@@ -70,17 +139,28 @@ namespace TiaGitHandler
                     password = args[2];
             }
 
-            Credentials credentials = null;
-            if (!string.IsNullOrEmpty(user) && !string.IsNullOrEmpty(password))
+            if (prj == null)
             {
-                credentials = new Credentials() {Username = user, Password = new SecureString()};
-                foreach (char c in password)
+                Credentials credentials = null;
+                if (!string.IsNullOrEmpty(user) && !string.IsNullOrEmpty(password))
                 {
-                    credentials.Password.AppendChar(c);
+                    credentials = new Credentials() { Username = user, Password = new SecureString() };
+                    foreach (char c in password)
+                    {
+                        credentials.Password.AppendChar(c);
+                    }
                 }
-            }
-            var prj = Projects.LoadProject(file, false, credentials);
 
+                prj = Projects.LoadProject(file, false, credentials);
+            }
+
+            _projectType = prj.ProjectType;
+
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine("Opened Project - " + prj.ProjectType.ToString());
+            Console.WriteLine("Exporting to Folder: " + exportPath);
+            Console.WriteLine();
             List<string> skippedBlocksList = new List<string>();
             ParseFolder(prj.ProjectStructure, exportPath, skippedBlocksList);
 
@@ -121,7 +201,7 @@ namespace TiaGitHandler
             if (folder is IBlocksFolder)
             {
                 var blkFld = folder as IBlocksFolder;
-                
+
                 foreach (var projectBlockInfo in blkFld.BlockInfos)
                 {
                     try
@@ -130,6 +210,49 @@ namespace TiaGitHandler
                         string xml = null;
                         if (src != null)
                         {
+                            if (!removeNoBlanks)
+                            {
+                                /*var startIndex = src.IndexOf("   VAR ");
+                                var endIndex = src.IndexOf("   END_VAR", startIndex);*/
+                                var startIndex = 0;
+                                var endIndex = src.IndexOf("BEGIN", startIndex);
+                                if (endIndex == -1) endIndex = src.IndexOf("END_TYPE", startIndex);
+
+                                if (endIndex != -1)
+                                {
+                                    var search = src;
+                                    var pattern = "   // ";
+
+                                    var indexes = Enumerable.Range(startIndex, endIndex - startIndex)
+                                        .Select(index =>
+                                        {
+                                            return new
+                                            {
+                                                Index = index,
+                                                Length = index + pattern.Length > search.Length
+                                                    ? search.Length - index
+                                                    : pattern.Length
+                                            };
+                                        })
+                                        .Where(searchbit =>
+                                            searchbit.Length == pattern.Length && pattern.Equals(
+                                                search.Substring(searchbit.Index, searchbit.Length),
+                                                StringComparison.OrdinalIgnoreCase))
+                                        .Select(searchbit => searchbit.Index);
+
+                                    var updatedSrc = src;
+
+                                    foreach (var x in indexes.Reverse())
+                                        if (removeOnlyOneBlank)
+                                            updatedSrc = updatedSrc.Remove(x + 5, 1);
+                                        else if (removeAllBlanks)
+                                            while (updatedSrc[x + 5].ToString() == " ")
+                                                updatedSrc = updatedSrc.Remove(x + 5, 1);
+
+                                    src = updatedSrc;
+                                }
+                            }
+
                             var ext = "xml";
                             if (projectBlockInfo.BlockLanguage == PLCLanguage.DB && projectBlockInfo.BlockType == PLCBlockType.DB)
                             {
@@ -157,12 +280,17 @@ namespace TiaGitHandler
                             else if (projectBlockInfo.BlockType == PLCBlockType.UDT)
                             {
                                 ext = "udt";
+                                xml = projectBlockInfo.Export(ExportFormat.Xml);
                             }
                             var file = Path.Combine(path, projectBlockInfo.Name.Replace("\\", "_").Replace("/", "_") + "." + ext);
                             var xmlfile = Path.Combine(path, projectBlockInfo.Name.Replace("\\", "_").Replace("/", "_") + ".xml");
 
                             var xmlValid = false;
                             XmlDocument xmlDoc = new XmlDocument();
+                            XmlNamespaceManager ns = new XmlNamespaceManager(xmlDoc.NameTable);
+                            ns.AddNamespace("smns", "http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v3");
+                            ns.AddNamespace("smns2", "http://www.siemens.com/automation/Openness/SW/Interface/v3");
+
                             try
                             {
                                 xmlDoc.LoadXml(src);
@@ -184,6 +312,7 @@ namespace TiaGitHandler
                                 catch
                                 {
                                 }
+
                                 try
                                 {
                                     var nodes = xmlDoc.SelectNodes("//DocumentInfo");
@@ -192,6 +321,162 @@ namespace TiaGitHandler
                                 }
                                 catch
                                 {
+                                }
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//CodeModifiedDate");
+                                    var node = nodes[0];
+                                    node.ParentNode.RemoveChild(node);
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//CompileDate");
+                                    var node = nodes[0];
+                                    node.ParentNode.RemoveChild(node);
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//CreationDate");
+                                    var node = nodes[0];
+                                    node.ParentNode.RemoveChild(node);
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//InterfaceModifiedDate");
+                                    var node = nodes[0];
+                                    node.ParentNode.RemoveChild(node);
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//ModifiedDate");
+                                    var node = nodes[0];
+                                    node.ParentNode.RemoveChild(node);
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//ParameterModified");
+                                    var node = nodes[0];
+                                    node.ParentNode.RemoveChild(node);
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//StructureModified");
+                                    var node = nodes[0];
+                                    node.ParentNode.RemoveChild(node);
+                                }
+                                catch
+                                {
+                                }
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//smns:DateAttribute[@Name='ParameterModifiedTS']", ns);
+                                    foreach (var node in nodes.Cast<XmlNode>())
+                                    {
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                }
+                                catch
+                                {
+                                }
+
+                                //try
+                                //{
+                                //    var nodes = xmlDoc.SelectNodes("//smns:Address[@Area='None' and @Informative='true']", ns);
+                                //    foreach (var node in nodes.Cast<XmlNode>())
+                                //    {
+                                //        node.ParentNode.RemoveChild(node);
+                                //    }
+                                //}
+                                //catch
+                                //{
+                                //}
+
+                                //try
+                                //{
+                                //    var nodes = xmlDoc.SelectNodes("//smns2:IntegerAttribute[@Name='Offset' and @Informative='true']", ns);
+                                //    foreach (var node in nodes.Cast<XmlNode>())
+                                //    {
+                                //        node.ParentNode.RemoveChild(node);
+                                //    }
+                                //}
+                                //catch
+                                //{
+                                //}
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//*[@Informative='true']");
+                                    foreach (var node in nodes.Cast<XmlNode>())
+                                    {
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//*[local-name()='InstanceOfNumber']");
+                                    foreach (var node in nodes.Cast<XmlNode>())
+                                    {
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                }
+                                catch
+                                {
+                                }
+
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//*[local-name()='LibraryConformanceStatus']");
+                                    foreach (var node in nodes.Cast<XmlNode>())
+                                    {
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                }
+                                catch
+                                {
+                                }
+
+                                if (resetSetpoints)
+                                {
+                                    try
+                                    {
+                                        var nodes = xmlDoc.SelectNodes("//smns2:BooleanAttribute[@Name='SetPoint']", ns);
+                                        foreach (var node in nodes.Cast<XmlNode>())
+                                        {
+                                            node.InnerText = "false";
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
                                 }
 
                                 StringBuilder sb = new StringBuilder();
@@ -219,6 +504,10 @@ namespace TiaGitHandler
                             {
                                 var xmlValid2 = false;
                                 XmlDocument xmlDoc2 = new XmlDocument();
+                                XmlNamespaceManager ns2 = new XmlNamespaceManager(xmlDoc2.NameTable);
+                                ns2.AddNamespace("smns", "http://www.siemens.com/automation/Openness/SW/NetworkSource/FlgNet/v3");
+                                ns2.AddNamespace("smns2", "http://www.siemens.com/automation/Openness/SW/Interface/v3");
+
                                 try
                                 {
                                     xmlDoc2.LoadXml(xml);
@@ -231,6 +520,30 @@ namespace TiaGitHandler
 
                                 if (xmlValid2)
                                 {
+                                    if (!removeNoBlanks)
+                                    {
+                                        try
+                                        {
+                                            XmlNodeList nodes = xmlDoc2.GetElementsByTagName("MultiLanguageText");
+
+                                            var pattern = "^( *)(.*)";
+
+                                            foreach (var n in nodes.Cast<XmlNode>())
+                                            {
+                                                if (removeOnlyOneBlank)
+                                                {
+                                                    n.InnerText = Regex.Replace(n.InnerText, pattern, m => m.Groups[1].Value.Substring(0, m.Groups[1].Value.Length - 1) + m.Groups[2].Value);
+                                                }
+                                                else if (removeAllBlanks)
+                                                {
+                                                    n.InnerXml = Regex.Replace(n.InnerXml, pattern, m => "" + m.Groups[2].Value);
+                                                }
+                                            }
+                                        }
+                                        catch
+                                        { }
+                                    }
+
                                     try
                                     {
                                         var nodes = xmlDoc2.SelectNodes("//Created");
@@ -238,8 +551,8 @@ namespace TiaGitHandler
                                         node.ParentNode.RemoveChild(node);
                                     }
                                     catch
-                                    {
-                                    }
+                                    { }
+
                                     try
                                     {
                                         var nodes = xmlDoc2.SelectNodes("//DocumentInfo");
@@ -247,7 +560,172 @@ namespace TiaGitHandler
                                         node.ParentNode.RemoveChild(node);
                                     }
                                     catch
+                                    { }
+
+                                    try
                                     {
+                                        var nodes = xmlDoc2.SelectNodes("//CodeModifiedDate");
+                                        var node = nodes[0];
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    try
+                                    {
+                                        var nodes = xmlDoc2.SelectNodes("//CompileDate");
+                                        var node = nodes[0];
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    try
+                                    {
+                                        var nodes = xmlDoc2.SelectNodes("//CreationDate");
+                                        var node = nodes[0];
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    try
+                                    {
+                                        var nodes = xmlDoc2.SelectNodes("//InterfaceModifiedDate");
+                                        var node = nodes[0];
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    try
+                                    {
+                                        var nodes = xmlDoc2.SelectNodes("//ModifiedDate");
+                                        var node = nodes[0];
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    try
+                                    {
+                                        var nodes = xmlDoc2.SelectNodes("//ParameterModified");
+                                        var node = nodes[0];
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    try
+                                    {
+                                        var nodes = xmlDoc2.SelectNodes("//StructureModified");
+                                        var node = nodes[0];
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    if (removeCodeFromXml && !xml.Contains("$$GITHANDLER-KEEPCODE$$"))
+                                    {
+                                        try
+                                        {
+                                            var nodes = xmlDoc2.SelectNodes("//SW.Blocks.CompileUnit");
+                                            var node = nodes[0];
+                                            node.InnerXml = "";
+                                            var parent = node.ParentNode;
+                                            foreach (var nd in nodes.Cast<XmlNode>().Skip(1).ToList())
+                                            {
+                                                parent.RemoveChild(nd);
+                                            }
+                                        }
+                                        catch
+                                        { }
+                                    }
+
+                                    try
+                                    {
+                                        var nodes = xmlDoc2.SelectNodes("//smns:DateAttribute[@Name='ParameterModifiedTS']", ns2);
+                                        foreach (var node in nodes.Cast<XmlNode>())
+                                        {
+                                            node.ParentNode.RemoveChild(node);
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    try
+                                    {
+                                        var nodes = xmlDoc2.SelectNodes("//*[@Informative='true']");
+                                        foreach (var node in nodes.Cast<XmlNode>())
+                                        {
+                                            node.ParentNode.RemoveChild(node);
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    try
+                                    {
+                                        var nodes = xmlDoc2.SelectNodes("//*[local-name()='LibraryConformanceStatus']");
+                                        foreach (var node in nodes.Cast<XmlNode>())
+                                        {
+                                            node.ParentNode.RemoveChild(node);
+                                        }
+                                    }
+                                    catch
+                                    {
+                                    }
+
+                                    if (projectBlockInfo.BlockLanguage == PLCLanguage.DB && projectBlockInfo.BlockType == PLCBlockType.DB && projectBlockInfo.IsInstance)
+                                    {
+                                        try
+                                        {
+                                            var nodes = xmlDoc2.SelectNodes("//*[local-name()='Interface']/*[local-name()='Sections']/*[local-name()='Section']/*[local-name()='Member']");
+                                            foreach (var node in nodes.Cast<XmlNode>())
+                                            {
+                                                node.ParentNode.RemoveChild(node);
+                                            }
+                                        }
+                                        catch
+                                        {
+                                        }
+
+                                        try
+                                        {
+                                            var nodes = xmlDoc2.SelectNodes("//*[local-name()='InstanceOfNumber']");
+                                            foreach (var node in nodes.Cast<XmlNode>())
+                                            {
+                                                node.ParentNode.RemoveChild(node);
+                                            }
+                                        }
+                                        catch
+                                        {
+                                        }
+
+                                    }
+
+                                    if (resetSetpoints)
+                                    {
+                                        try
+                                        {
+                                            var nodes = xmlDoc2.SelectNodes("//smns2:BooleanAttribute[@Name='SetPoint']", ns2);
+                                            foreach (var node in nodes.Cast<XmlNode>())
+                                            {
+                                                node.InnerText = "false";
+                                            }
+                                        }
+                                        catch
+                                        {
+                                        }
                                     }
 
                                     StringBuilder sb = new StringBuilder();
@@ -265,12 +743,12 @@ namespace TiaGitHandler
 
                                     xml = sb.ToString();
 
-                                    xml = xml.Replace("<ProgrammingLanguage>SCL</ProgrammingLanguage>", "<ProgrammingLanguage>STL</ProgrammingLanguage>");
+                                    if (_projectType == ProjectType.Tia14SP1)
+                                        xml = xml.Replace("<ProgrammingLanguage>SCL</ProgrammingLanguage>", "<ProgrammingLanguage>STL</ProgrammingLanguage>");
                                 }
 
                                 Directory.CreateDirectory(path);
                                 File.WriteAllText(xmlfile, xml, new UTF8Encoding(true));
-
                             }
                         }
                         else
@@ -285,11 +763,249 @@ namespace TiaGitHandler
                     }
                 }
             }
+            else if (folder is ITIAVarTabFolder varTabfld)
+            {
+                foreach (var varTab in varTabfld.TagTables)
+                {
+                    var xmlValid = false;
+                    string xml = null;
+                    XmlDocument xmlDoc = new XmlDocument();
+
+                    var file = Path.Combine(path, varTab.Name.Replace("\\", "_").Replace("/", "_") + ".xml");
+                    try
+                    {
+                        var vt = varTab.Export();
+                        try
+                        {
+                            xmlDoc.LoadXml(vt);
+                            xmlValid = true;
+                        }
+                        catch
+                        {
+                            xmlValid = false;
+                        }
+
+                        if (xmlValid)
+                        {
+                            try
+                            {
+                                var nodes = xmlDoc.SelectNodes("//Created");
+                                var node = nodes[0];
+                                node.ParentNode.RemoveChild(node);
+                            }
+                            catch
+                            {
+                            }
+
+                            try
+                            {
+                                var nodes = xmlDoc.SelectNodes("//DocumentInfo");
+                                var node = nodes[0];
+                                node.ParentNode.RemoveChild(node);
+                            }
+                            catch
+                            {
+                            }
+                        }
+                        
+                        StringBuilder sb = new StringBuilder();
+                        XmlWriterSettings settings = new XmlWriterSettings
+                        {
+                            Indent = true,
+                            IndentChars = "  ",
+                            NewLineChars = "\r\n",
+                            NewLineHandling = NewLineHandling.Replace
+                        };
+                        using (TextWriter writer = new EncodingStringWriter(sb, Encoding.UTF8))
+                        {
+                            xmlDoc.Save(writer);
+                        }
+
+                        xml = sb.ToString();
+
+                        Directory.CreateDirectory(path);
+                        File.WriteAllText(file, xml, new UTF8Encoding(true));
+                    }
+                    catch
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(file + " could not be exported");
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
+                }
+            }
+            else if (folder is ITIAWatchAndForceTablesFolder wtfFld)
+            {
+                foreach (var varTab in wtfFld.WatchTables)
+                {
+                    var xmlValid = false;
+                    string xml = null;
+                    XmlDocument xmlDoc = new XmlDocument();
+
+                    var file = Path.Combine(path, varTab.Name.Replace("\\", "_").Replace("/", "_") + ".watch");
+
+                    try
+                    {
+                        var vt = varTab.Export();
+                        try
+                        {
+                            xmlDoc.LoadXml(vt);
+                            xmlValid = true;
+                        }
+                        catch
+                        {
+                            xmlValid = false;
+                        }
+
+                        if (xmlValid)
+                        {
+                            try
+                            {
+                                var nodes = xmlDoc.SelectNodes("//Created");
+                                var node = nodes[0];
+                                node.ParentNode.RemoveChild(node);
+                            }
+                            catch
+                            {
+                            }
+
+                            try
+                            {
+                                var nodes = xmlDoc.SelectNodes("//DocumentInfo");
+                                var node = nodes[0];
+                                node.ParentNode.RemoveChild(node);
+                            }
+                            catch
+                            {
+                            }
+                        }
+
+                        StringBuilder sb = new StringBuilder();
+                        XmlWriterSettings settings = new XmlWriterSettings
+                        {
+                            Indent = true,
+                            IndentChars = "  ",
+                            NewLineChars = "\r\n",
+                            NewLineHandling = NewLineHandling.Replace
+                        };
+                        using (TextWriter writer = new EncodingStringWriter(sb, Encoding.UTF8))
+                        {
+                            xmlDoc.Save(writer);
+                        }
+
+                        xml = sb.ToString();
+                        Directory.CreateDirectory(path);
+                        File.WriteAllText(file, xml, new UTF8Encoding(true));
+                    }
+                    catch
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(file + " could not be exported");
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
+                }
+                foreach (var varTab in wtfFld.ForceTables)
+                {
+                    var xmlValid = false;
+                    string xml = null;
+                    XmlDocument xmlDoc = new XmlDocument();
+
+                    var file = Path.Combine(path, varTab.Name.Replace("\\", "_").Replace("/", "_") + ".force");
+
+                    try
+                    {
+                        var vt = varTab.Export();
+
+                        try
+                        {
+                            xmlDoc.LoadXml(vt);
+                            xmlValid = true;
+                        }
+                        catch
+                        {
+                            xmlValid = false;
+                        }
+
+                        if (xmlValid)
+                        {
+                            try
+                            {
+                                var nodes = xmlDoc.SelectNodes("//Created");
+                                var node = nodes[0];
+                                node.ParentNode.RemoveChild(node);
+                            }
+                            catch
+                            {
+                            }
+
+                            try
+                            {
+                                var nodes = xmlDoc.SelectNodes("//DocumentInfo");
+                                var node = nodes[0];
+                                node.ParentNode.RemoveChild(node);
+                            }
+                            catch
+                            {
+                            }
+                        }
+
+                        StringBuilder sb = new StringBuilder();
+                        XmlWriterSettings settings = new XmlWriterSettings
+                        {
+                            Indent = true,
+                            IndentChars = "  ",
+                            NewLineChars = "\r\n",
+                            NewLineHandling = NewLineHandling.Replace
+                        };
+                        using (TextWriter writer = new EncodingStringWriter(sb, Encoding.UTF8))
+                        {
+                            xmlDoc.Save(writer);
+                        }
+
+                        xml = sb.ToString();
+                        Directory.CreateDirectory(path);
+                        File.WriteAllText(file, xml, new UTF8Encoding(true));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(file + " could not be exported");
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
+                }
+            }
         }
 
         private static string NormalizeFolderName(string name)
         {
             return name.Replace("-", "").Replace(".", "").Replace(" ", "");
+        }
+
+        public static void DeleteDirectory(string path)
+        {
+            foreach (string directory in Directory.GetDirectories(path))
+            {
+                Thread.Sleep(1);
+                DeleteDir(directory);
+            }
+            DeleteDir(path);
+        }
+
+        private static void DeleteDir(string dir)
+        {
+            try
+            {
+                Thread.Sleep(1);
+                Directory.Delete(dir, true);
+            }
+            catch (IOException)
+            {
+                DeleteDir(dir);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                DeleteDir(dir);
+            }
         }
     }
 }

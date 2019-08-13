@@ -16,16 +16,6 @@ namespace DotNetSiemensPLCToolBoxLibrary.Projectfiles
 {
     public partial class Step7ProjectV13 : Project, IDisposable
     {
-        public enum TiaVersionTypes
-        {
-            V11 = 11,
-            V12 = 12,
-            V13 = 13,
-            V14 = 14,
-        }
-
-        public static TiaVersionTypes TiaVersion { get; private set; }
-
         private string DataFile = null;
 
         private XmlDocument tiaProject;
@@ -194,6 +184,11 @@ namespace DotNetSiemensPLCToolBoxLibrary.Projectfiles
                 var projectid = rootObjects.TiaRootObjectEntrys.FirstOrDefault(x => x.ObjectId.TypeId == (int)TiaTypeIds.Siemens_Automation_DomainModel_ProjectData).ObjectId;
                 var projectobj = TiaObjects[projectid];
             }
+        }
+
+        public override ProjectType ProjectType
+        {
+            get { return ProjectType.Tia13; }
         }
 
         protected override void LoadProject()

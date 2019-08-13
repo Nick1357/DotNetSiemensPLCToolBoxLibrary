@@ -9,14 +9,16 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 {
     public class PLCTag<T> : PLCTag
     {
+        private Type _type;
+        private Type _underlyingType;
+        private bool _isStructType;
+
         //private T _value;
         //private T _controlvalue;
         //Todo support for string and array datatypes
         internal override void _putControlValueIntoBuffer(byte[] buff, int startpos)
         {
-            var type = typeof (T);
-            bool isStruct = type.IsValueType && !type.IsEnum && !type.IsPrimitive && type != typeof (decimal);
-            if (isStruct)
+            if (_isStructType)
             {
                 byte[] tmp = ToBytes(_controlvalue);
                 Array.Copy(tmp, 0, buff, startpos, tmp.Length);
@@ -29,9 +31,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
         internal override void _readValueFromBuffer(byte[] buff, int startpos)
         {
-            var type = typeof(T);
-            bool isStruct = type.IsValueType && !type.IsEnum && !type.IsPrimitive && type != typeof(decimal);
-            if (isStruct)
+            if (_isStructType)
             {
                 _value = (T)FromBytes(typeof(T), buff, startpos);
             }
@@ -51,29 +51,56 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
         }
         public PLCTag()
         {
-            if (typeof(T) == typeof(Int16))
+            this._type = typeof(T);
+            if (this._type.IsEnum)
+                _underlyingType = Enum.GetUnderlyingType(this._type);
+            this._isStructType = this._type.IsValueType && !this._type.IsEnum && !this._type.IsPrimitive && this._type != typeof(decimal);
+            ParseGenericType();
+        }
+
+        public PLCTag(string initalizationString) : base(initalizationString)
+        {
+            this._type = typeof(T);
+            if (this._type.IsEnum)
+                _underlyingType = Enum.GetUnderlyingType(this._type);
+            this._isStructType = this._type.IsValueType && !this._type.IsEnum && !this._type.IsPrimitive && this._type != typeof(decimal);
+        }
+
+        public PLCTag(string address, TagDataType type) : base(address, type)
+        {
+            this._type = typeof(T);
+            if (this._type.IsEnum)
+                _underlyingType = Enum.GetUnderlyingType(this._type);
+            this._isStructType = this._type.IsValueType && !this._type.IsEnum && !this._type.IsPrimitive && this._type != typeof(decimal);
+        }
+
+        private void ParseGenericType()
+        {
+            var type = _underlyingType ?? _type;
+            
+            if (type == typeof(Int16))
                 this.TagDataType = TagDataType.Int;
-            else if (typeof(T) == typeof(Int32))
+            else if (type == typeof(Int32))
                 this.TagDataType = TagDataType.Dint;
-            else if (typeof(T) == typeof(Int64))
+            else if (type == typeof(Int64))
                 this.TagDataType = TagDataType.LInt;
-            else if (typeof(T) == typeof(UInt16))
+            else if (type == typeof(UInt16))
                 this.TagDataType = TagDataType.Word;
-            else if (typeof(T) == typeof(UInt32))
+            else if (type == typeof(UInt32))
                 this.TagDataType = TagDataType.Dword;
-            else if (typeof(T) == typeof(UInt64))
+            else if (type == typeof(UInt64))
                 this.TagDataType = TagDataType.LWord;
-            else if (typeof(T) == typeof(byte))
+            else if (type == typeof(byte))
                 this.TagDataType = TagDataType.Byte;
-            else if (typeof(T) == typeof(sbyte))
+            else if (type == typeof(sbyte))
                 this.TagDataType = TagDataType.SByte;
-            else if (typeof(T) == typeof(Single))
+            else if (type == typeof(Single))
                 this.TagDataType = TagDataType.Float;
-            else if (typeof(T) == typeof(Double))
+            else if (type == typeof(Double))
                 this.TagDataType = TagDataType.LReal;
-            else if (typeof(T) == typeof(string))
+            else if (type == typeof(string))
                 this.TagDataType = TagDataType.CharArray;
-            else if (typeof(T) == typeof(byte[]))
+            else if (type == typeof(byte[]))
                 this.TagDataType = TagDataType.ByteArray;
             else
                 this.TagDataType = TagDataType.Struct;
@@ -81,18 +108,27 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
         public T GenericValue
         {
-            get { return (T)_value; }
+            get
+            {
+                if (_value == null)
+                    return default(T);
+                if (this._type.IsEnum)
+                    return (T)Convert.ChangeType(_value, _underlyingType);
+                return  (T)_value;
+            }
             set
             {
-                Value = value;
-                //this._value = (T)value; 
-                //NotifyPropertyChanged("Value");
-                //NotifyPropertyChanged("GenericValue");
+                if (this._type.IsEnum)
+                    Value = Convert.ChangeType(value, _underlyingType);
+                else
+                    Value = value;
             }
         }
         internal override int _internalGetSize()
         {
-            return GetStructSize(typeof(T));
+            if (this._isStructType)
+                return GetStructSize(typeof(T));
+            return base._internalGetSize();
         }
 
 
