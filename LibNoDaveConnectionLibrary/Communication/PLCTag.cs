@@ -1396,7 +1396,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         else
                             _ArraySize *= 8;
                     }
-                    
+
                     ArraySize = Convert.ToInt32(_ArraySize * tsize);
 
                     //if (this.TagDataType != TagDataType.ByteArray && this.TagDataType != TagDataType.CharArray && this.TagDataType != TagDataType.String && this.TagDataType != TagDataType.DateTime)
@@ -1464,17 +1464,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         }
                         this.ByteAddress = Convert.ToInt32(myPlcAddress[1].Replace("DBW", "").Replace("DBD", "").Replace("DBR", "").Replace("DBX", "").Replace("DBB", "").Replace("DBL", "").Trim());
                     }
-                    //if (this.TagDataType != TagDataType.ByteArray && this.TagDataType != TagDataType.CharArray && this.TagDataType != TagDataType.String && this.TagDataType != TagDataType.DateTime)
-                    //    this.TagDataType = TagDataType.ByteArray;
-                    //if (ArraySize != 8 && this.TagDataType == TagDataType.DateTime)
-                    //    this.TagDataType = TagDataType.ByteArray;
-
-
-                }
-                else
-                {
-                    string[] myPlcAddress = plcAddress.ToUpper().Trim().Replace(" ", "").Split('.');
-                    if (myPlcAddress.Length >= 2 && (myPlcAddress[0].Contains("DB") || myPlcAddress[0].Contains("DI")))
+                    else
                     {
                         if (myPlcAddress[0].Contains("PE") || myPlcAddress[0].Contains("PI"))
                             this.TagDataSource = MemoryArea.Periphery;
@@ -1550,7 +1540,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             ArraySize = 1;
                             this.TagDataType = TagDataType.Int;
                         }
-                        else if (myPlcAddress[1].Contains("DBB"))
+                        else
                         {
                             ArraySize = 1;
                             if (_internalGetSize() != 1)
