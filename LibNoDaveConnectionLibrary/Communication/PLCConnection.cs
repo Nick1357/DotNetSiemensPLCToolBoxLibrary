@@ -4269,6 +4269,81 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 #endif
         #endregion
 
+        #region Forces
+        public void Force(string address, object value)
+        {
+            Force(new[] { new PLCTag(address) { Controlvalue = value } });
+        }
+
+        public void Force(PLCTag tag)
+        {
+            Force(new[] { tag });
+        }
+
+        public void Force(IEnumerable<PLCTag> tags)
+        {
+            lock (lockObj)
+            {
+                if (!tags.All(a => a.TagDataSource == MemoryArea.Periphery || a.TagDataSource == MemoryArea.Inputs || a.TagDataSource == MemoryArea.Outputs))
+                    throw new Exception("MemoryArea not supported");
+                if (tags.Any(a => a.ReadByteSize > 4))
+                    throw new Exception("ReadByte not supported");
+
+                Unforce();
+
+                int res;
+                foreach (var tag in tags)
+                {
+                    byte[] buffer = new byte[tag.ReadByteSize /*._internalGetSize()*/];
+                    tag._putControlValueIntoBuffer(buffer, 0);
+
+                    res = _dc.daveAddToForceJobInternal((int)tag.TagDataSource, tag.TagDataType == TagDataType.Bool, tag.ByteAddress, tag.BitAddress, tag.ReadByteSize, buffer);
+                    if (res != 0)
+                        throw new PLCException(res);
+                }
+                res = _dc.daveActivateForce();
+                if (res != 0)
+                    throw new PLCException(res);
+
+                try
+                {
+                    for (int i = 0; i < tags.Count(); i++)
+                    {
+                        res = _dc.daveGetForceJobReturnCode(i);
+                        if (res != 0)
+                            throw new PLCException(res);
+                    }
+                }
+                finally
+                {
+                    if (res != 0)
+                        Unforce();
+                }
+            }
+        }
+
+        public void Unforce()
+        {
+            lock (lockObj)
+            {
+                bool forcejobActive;
+                int forcejobId;
+                int res = _dc.daveReadJoblistForces(out forcejobActive, out forcejobId);
+                if (res != 0)
+                    throw new PLCException(res);
+                if (forcejobActive)
+                {
+                    res = _dc.daveDeleteForceJob(forcejobId);
+                    if (res != 0)
+                        throw new PLCException(res);
+                }
+                res = _dc.daveClearForceJobInternal();
+                if (res != 0)
+                    throw new PLCException(res);
+            }
+        }
+        #endregion
+
         #region Debug
         public void SetDaveDebug(int newDebugLevel = 0)
         {

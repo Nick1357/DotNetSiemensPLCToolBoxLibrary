@@ -49,5 +49,14 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication.LibNoDave
         int daveGetNcFileSize(string filename, ref int length);
         int davePutNCProgram(string filename, string path, string ts, byte[] buffer, int length);
         int alarmQueryAlarm_S(byte[] buffer, int length, ref int alarmCount);
+
+        #region Forces
+        int daveClearForceJobInternal();
+        int daveAddToForceJobInternal(int area, bool isBitAddress, int bytePos, int bitPos, int byteCount, byte[] buffer);
+        int daveReadJoblistForces(out bool forcejobActive, out int forcejobId);
+        int daveActivateForce();
+        int daveDeleteForceJob(int forcejobId);
+        int daveGetForceJobReturnCode(int itemNo);
+        #endregion
     }
 }

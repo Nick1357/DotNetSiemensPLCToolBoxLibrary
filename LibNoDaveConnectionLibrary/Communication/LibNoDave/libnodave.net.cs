@@ -1686,6 +1686,152 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication.LibNoDave
             }
             #endregion
             #endregion
+
+            #region Forces
+            #region daveClearForceJobInternal
+#if !IPHONE
+            [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveClearForceJobInternal")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveClearForceJobInternal")]
+#endif
+            protected static extern int daveClearForceJobInternal_64(IntPtr dc);
+
+#if !IPHONE
+            [DllImport("libnodave_jfkmod.dll", EntryPoint = "daveClearForceJobInternal")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveClearForceJobInternal")]
+#endif
+            protected static extern int daveClearForceJobInternal_32(IntPtr dc);
+
+            public int daveClearForceJobInternal()
+            {
+                if (IntPtr.Size == 8)
+                    return daveClearForceJobInternal_64(pointer);
+                else
+                    return daveClearForceJobInternal_32(pointer);
+            }
+            #endregion
+
+            #region daveAddToForceJobInternal
+#if !IPHONE
+            [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveAddToForceJobInternal")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveAddToForceJobInternal")]
+#endif
+            protected static extern int daveAddToForceJobInternal_64(IntPtr dc, int area, int isBitAddress, int bytePos, int bitPos, int byteCount, byte[] buffer);
+
+#if !IPHONE
+            [DllImport("libnodave_jfkmod.dll", EntryPoint = "daveAddToForceJobInternal")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveAddToForceJobInternal")]
+#endif
+            protected static extern int daveAddToForceJobInternal_32(IntPtr dc, int area, int isBitAddress, int bytePos, int bitPos, int byteCount, byte[] buffer);
+
+            public int daveAddToForceJobInternal(int area, bool isBitAddress, int bytePos, int bitPos, int byteCount, byte[] buffer)
+            {
+                if (IntPtr.Size == 8)
+                    return daveAddToForceJobInternal_64(pointer, area, isBitAddress ? 1 : 0, bytePos, bitPos, byteCount, buffer);
+                else
+                    return daveAddToForceJobInternal_32(pointer, area, isBitAddress ? 1 : 0, bytePos, bitPos, byteCount, buffer);
+            }
+            #endregion
+
+            #region daveReadJoblistForces
+#if !IPHONE
+            [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveReadJoblistForces")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveReadJoblistForces")]
+#endif
+            protected static extern int daveReadJoblistForces_64(IntPtr dc, out bool forcejobActive, out int forcejobId);
+
+#if !IPHONE
+            [DllImport("libnodave_jfkmod.dll", EntryPoint = "daveReadJoblistForces")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveReadJoblistForces")]
+#endif
+            protected static extern int daveReadJoblistForces_32(IntPtr dc, out bool forcejobActive, out int forcejobId);
+
+            public int daveReadJoblistForces(out bool forcejobActive, out int forcejobId)
+            {
+                if (IntPtr.Size == 8)
+                    return daveReadJoblistForces_64(pointer, out forcejobActive, out forcejobId);
+                else
+                    return daveReadJoblistForces_32(pointer, out forcejobActive, out forcejobId);
+            }
+            #endregion
+
+            #region daveActivateForce
+#if !IPHONE
+            [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveActivateForce")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveActivateForce")]
+#endif
+            protected static extern int daveActivateForce_64(IntPtr dc);
+
+#if !IPHONE
+            [DllImport("libnodave_jfkmod.dll", EntryPoint = "daveActivateForce")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveActivateForce")]
+#endif
+            protected static extern int daveActivateForce_32(IntPtr dc);
+
+            public int daveActivateForce()
+            {
+                if (IntPtr.Size == 8)
+                    return daveActivateForce_64(pointer);
+                else
+                    return daveActivateForce_32(pointer);
+            }
+            #endregion
+
+            #region daveDeleteForceJob
+#if !IPHONE
+            [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveDeleteForceJob")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveDeleteForceJob")]
+#endif
+            protected static extern int daveDeleteForceJob_64(IntPtr dc, int forcejobId);
+
+#if !IPHONE
+            [DllImport("libnodave_jfkmod.dll", EntryPoint = "daveDeleteForceJob")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveDeleteForceJob")]
+#endif
+            protected static extern int daveDeleteForceJob_32(IntPtr dc, int forcejobId);
+
+            public int daveDeleteForceJob(int forcejobId)
+            {
+                if (IntPtr.Size == 8)
+                    return daveDeleteForceJob_64(pointer, forcejobId);
+                else
+                    return daveDeleteForceJob_32(pointer, forcejobId);
+            }
+            #endregion
+
+            #region daveGetForceJobReturnCode
+#if !IPHONE
+            [DllImport("libnodave_jfkmod64.dll", EntryPoint = "daveGetForceJobReturnCode")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveGetForceJobReturnCode")]
+#endif
+            protected static extern int daveGetForceJobReturnCode_64(IntPtr dc, int itemNo);
+
+#if !IPHONE
+            [DllImport("libnodave_jfkmod.dll", EntryPoint = "daveGetForceJobReturnCode")]
+#else
+            [DllImport("__Internal", EntryPoint = "daveGetForceJobReturnCode")]
+#endif
+            protected static extern int daveGetForceJobReturnCode_32(IntPtr dc, int itemNo);
+
+            public int daveGetForceJobReturnCode(int itemNo)
+            {
+                if (IntPtr.Size == 8)
+                    return daveGetForceJobReturnCode_64(pointer, itemNo);
+                else
+                    return daveGetForceJobReturnCode_32(pointer, itemNo);
+            }
+            #endregion
+            #endregion
         }
 
         public class PDU : pseudoPointer, IPDU

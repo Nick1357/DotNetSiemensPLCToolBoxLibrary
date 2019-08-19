@@ -458,6 +458,28 @@ extern "C" {
 		daveS5AreaInfo * first;
 	} daveS5cache;
 
+
+	/*
+	 * Die Auftragsdaten der Forces werden in einer Variable an daveConnection geführt.
+	 */
+#define FORCE_MAX_ITEMS 10
+	typedef struct _daveForceItem
+	{
+		uc area;            // Speicherbereich
+		int bytePos;        // Startadresse
+		uc bitPos_repf;     // Bitposition bei Bitadresse, oder Repetition Faktor = 1 bei sonstigen
+		int len;            // Länge der zu forcenden Daten
+		uc value[4];        // Maximal 4 Byte Daten erlauben
+		uc retCode;         // Rückgabewert des Forceauftrags
+	} daveForceItem;
+
+	typedef struct _daveForceJob
+	{
+		int itemcount;
+		daveForceItem item[FORCE_MAX_ITEMS];
+	} daveForceJob;
+
+
 	/*
 		This holds data for a PLC connection;
 		*/
@@ -514,6 +536,7 @@ extern "C" {
 		int _routingDestination3;
 		int _routingDestination4;
 		int _routingDestinationSize;
+		daveForceJob forceJob;
 	};
 
 
@@ -530,7 +553,7 @@ extern "C" {
 	// Die NC schlägt eine PDU Größe von 960 von, arbeitet intern jedoch teilweiße mit der S7 PDU Größe von 240 z.B bei Drive Daten oder Datei Transfer über X150 //JEger
 	EXPORTSPEC
 		daveConnection * DECL2 daveNewExtendedConnection(daveInterface * di, void * Destination, int DestinationIsIP, int rack, int slot, int routing, int routingSubnetFirst, int routingSubnetSecond, int routingRack, int routingSlot, void * routingDestination, int routingDestinationIsIP, int ConnectionType, int routingConnectionType, int maxPDUlength);
-		
+
 	/*
 		Setup a new connection structure using an daveConnection Structure
 		*/
@@ -762,6 +785,14 @@ extern "C" {
 	EXPORTSPEC void DECL2 _daveConstructUpload(PDU *p, char blockType, int blockNr); // char or uc,to decide
 	EXPORTSPEC void DECL2 _daveConstructDoUpload(PDU * p, uc *uploadID);
 	EXPORTSPEC void DECL2 _daveConstructEndUpload(PDU * p, uc *uploadID);
+
+	/* Forces */
+	EXPORTSPEC int DECL2 daveClearForceJobInternal(daveConnection *dc);
+	EXPORTSPEC int DECL2 daveAddToForceJobInternal(daveConnection *dc, int area, int isBitAddress, int bytePos, int bitPos, int byteCount, void *buffer);
+	EXPORTSPEC int DECL2 daveReadJoblistForces(daveConnection *dc, int *forcejob_active, uc *forcejobId);
+	EXPORTSPEC int DECL2 daveActivateForce(daveConnection *dc);
+	EXPORTSPEC int DECL2 daveDeleteForceJob(daveConnection *dc, uc forcejobId);
+	EXPORTSPEC int DECL2 daveGetForceJobReturnCode(daveConnection *dc, int itemNo);
 
 	/*
 		Functions to load files from NC:

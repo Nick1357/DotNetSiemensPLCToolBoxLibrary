@@ -1592,5 +1592,37 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication.Library
         {
             throw new NotImplementedException();
         }
+
+        #region Forces
+        public int daveClearForceJobInternal()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int daveAddToForceJobInternal(int area, bool isBitAddress, int bytePos, int bitPos, int byteCount, byte[] buffer)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int daveReadJoblistForces(out bool forcejobActive, out int forcejobId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int daveActivateForce()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int daveDeleteForceJob(int forcejobId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public int daveGetForceJobReturnCode(int itemNo)
+        {
+            throw new NotImplementedException();
+        }
+        #endregion
     }
 }
