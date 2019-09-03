@@ -1964,7 +1964,7 @@ int DECL2 daveUseResultBuffer(daveResultSet * rl, int n, void * buffer){
 	{
 		LOG2("result set has %d results\n", rl->numResults);
 		FLUSH;
-	}      
+	}
 	if (rl->numResults == 0) return daveEmptyResultSetError;
 	if (n >= rl->numResults) return daveEmptyResultSetError;
 	dr = &(rl->results[n]);
@@ -2091,7 +2091,7 @@ daveConnection * DECL2 daveNewConnection(daveInterface * di, int MPI, int rack, 
 
 daveConnection * DECL2 _daveNewConnection(daveConnection * dc, int maxPDUlength) {
 	if (dc) {
-		if(maxPDUlength<=0)
+		if (maxPDUlength <= 0)
 			maxPDUlength = 960;
 		dc->maxPDUlength = maxPDUlength; //240;// 960;				// assume an (unreal?) maximum
 		dc->connectionNumber = dc->iface->nextConnection;	// 1/10/05 trying Andrew's patch
@@ -2417,6 +2417,449 @@ int DECL2 endUploadNC(daveConnection *dc, uc *uploadID){
 	res = _daveSetupReceivedPDU(dc, &p2);
 	return res;
 }
+
+
+/******************************************************************************
+ * Forces
+ */
+
+// Initialisiert die interne Force-Job-Liste mit Null
+int DECL2 daveClearForceJobInternal(daveConnection *dc) {
+	memset(&(dc->forceJob), 0, sizeof(daveForceJob));
+	return 0;
+}
+
+// Fügt der internen Force-Job-Liste ein Bereich und Forcewert hinzu.
+int DECL2 daveAddToForceJobInternal(daveConnection *dc, int area, int isBitAddress, int bytePos, int bitPos, int byteCount, void *buffer) {
+	int idx;
+	uc forcearea = 0;
+
+	if (dc->forceJob.itemcount >= FORCE_MAX_ITEMS) {
+		if (daveDebug & daveDebugPrintErrors) {
+			LOG2("daveAddToForceJobInternal: ForceJob.itemcount groesser Max = %d\n", dc->forceJob.itemcount);
+		}
+		return daveResNoBuffer;
+	}
+
+	switch (area) {
+	case daveP:
+		// "Peripheral I/O";
+		// Hier fehlt eine Unterscheidung zwischen PI und PQ, 0x30 = PI
+		// PQ fehlt allerdings in Wireshark auch noch, falls das wirklich möglich sein sollte.
+		forcearea = 0x30;
+		break;
+	case daveInputs:
+		forcearea = 0x10;
+		break;
+	case daveOutputs:
+		forcearea = 0x20;
+		break;
+	case daveFlags:
+		forcearea = 0x00;
+		break;
+	default:
+		if (daveDebug & daveDebugPrintErrors) {
+			LOG2("daveAddToForceJobInternal: area= %d wird nicht unterstuetzt\n", area);
+		}
+		return daveResItemNotAvailable;
+	}
+
+	if (!isBitAddress) {
+		switch (byteCount) {
+		case 1:
+			forcearea |= 0x01;
+			break;
+		case 2:
+			forcearea |= 0x02;
+			break;
+		case 4:
+			forcearea |= 0x03;
+			break;
+		default:
+			if (daveDebug & daveDebugPrintErrors) {
+				LOG2("daveAddToForceJobInternal: byteCount = %d wird nicht unterstuetzt\n", byteCount);
+			}
+			return daveResItemNotAvailable;
+		}
+	}
+	idx = dc->forceJob.itemcount;
+	dc->forceJob.item[idx].area = forcearea;
+	dc->forceJob.item[idx].bytePos = bytePos;
+	if (isBitAddress) {
+		if (bitPos >= 0 && bitPos <= 7) {
+			dc->forceJob.item[idx].bitPos_repf = bitPos;
+		}
+		else {
+			if (daveDebug & daveDebugPrintErrors) {
+				LOG2("daveAddToForceJobInternal: bitPos = %d nicht erlaubt\n", bitPos);
+			}
+			return daveResItemNotAvailable;
+		}
+	}
+	else {
+		dc->forceJob.item[idx].bitPos_repf = 1;
+	}
+
+	if (buffer) {
+		if (byteCount > 0 && byteCount <= 4) {
+			dc->forceJob.item[idx].len = byteCount;
+			memcpy(dc->forceJob.item[idx].value, buffer, byteCount);
+		}
+		else {
+			if (daveDebug & daveDebugPrintErrors) {
+				LOG2("daveAddToForceJobInternal: byteCount = %d nicht erlaubt\n", byteCount);
+			}
+			return daveResItemNotAvailable;
+		}
+	}
+	else {
+		if (daveDebug & daveDebugPrintErrors) {
+			LOG1("daveAddToForceJobInternal: buffer == NULL");
+		}
+		return daveResNoBuffer;
+	}
+	dc->forceJob.itemcount++;
+	return 0;
+}
+
+
+// Liest aus der SPS die Jobliste aus, und wertet aus ob ein Forceauftrag aktiv ist.
+// Bei aktivem Forceauftrag wird forcejob_active = 1 gesetzt und an forcejobId die Job-ID
+// zurückgegeben mit der dieser Forceauftrag ggf. deaktiviert werden kann.
+int DECL2 daveReadJoblistForces(daveConnection *dc, int *forcejob_active, uc *forcejobId) {
+	PDU p, p2;
+	int res;
+	int tps, tds;
+	int pos;
+	int item_cnt;
+	int i;
+	uc job_func;
+	uc job_ref;
+
+	uc pa[] = {
+		0x00, 0x01, 0x12,
+		0x08,
+		0x12, 0x41, 0x10, 0x00,
+		0x00, 0x00, 0x00, 0x00
+	};
+
+	uc da[] = {
+		0xff, 0x09, 0x00, 28,
+		0x00, 20,       // TIS parameter size: 20
+		0x00, 4,        // TIS data size: 4
+		// TIS Parameter
+		0x00, 0x00, 0x00, 0x00,
+		0x00, 0x01, 0x00, 0x00,
+		0x00, 0x01, 0x00, 0x01,
+		0x00, 0x01, 0x00, 0x01,
+		0x00, 0x01, 0x00, 0x00,
+		// TIS Data
+		0x00, 0x00,
+		0x00, 0x00
+	};
+
+	p.header = dc->msgOut + dc->PDUstartO;
+	_daveInitPDUheader(&p, 7);
+	_daveAddParam(&p, pa, sizeof(pa));
+	_daveAddData(&p, da, sizeof(da));
+
+	res = _daveExchange(dc, &p);
+	if (res != daveResOK) {
+		return -1;
+	}
+	res = _daveSetupReceivedPDU(dc, &p2);
+	if (daveGetDebug() & daveDebugPDU) {
+		_daveDumpPDU(&p2);
+	}
+	res = _daveTestResultData(&p2);
+	if (res != daveResOK) {
+		return res;
+	}
+	// Min. Größe für einen Job 12.
+	if (p2.udlen < 12) {
+		*forcejob_active = 0;
+		return 0;
+	}
+	// Es sind Jobs aktiv, jetzt prüfen ob ein Force darunter ist.
+	pos = 4;
+	tps = daveGetU16from(&p2.data[pos]);
+	pos += 2;
+	tds = daveGetU16from(&p2.data[pos]);
+	pos += 2;
+	// Parameter überspringen
+	pos += tps;
+	// Ein Job ist immer 4 Bytes groß. Vermutlich kann immer nur ein Forcejob aktiv sein,
+	// da es bei einer S7-300 zumindest einen Fehler gibt, wenn ein Force angemeldet werden soll
+	// und schon einer aktiv ist.
+	item_cnt = tds / 4;
+	for (i = 0; i < item_cnt; i++) {
+		job_func = p2.data[pos++];
+		job_ref = p2.data[pos++];
+		if (job_func == 9) {
+			*forcejob_active = 1;
+			*forcejobId = job_ref;
+		}
+		// 2 Bytes unbekannter Funktion
+		pos += 2;
+	}
+	return 0;
+}
+
+
+
+// Löscht einen Foreceauftrag mit der angegebenen Job-ID aus der SPS.
+int DECL2 daveDeleteForceJob(daveConnection *dc, uc forcejobId) {
+	PDU p, p2;
+	int res;
+	int errorcode;
+
+	uc pa[] = {
+		0x00, 0x01, 0x12,
+		0x08,
+		0x12, 0x41, 0x0f, 0x00,
+		0x00, 0x00, 0x00, 0x00
+	};
+
+	uc da[] = {
+		0xff, 0x09, 0x00, 28,
+		0x00, 20,       // TIS parameter size: 20
+		0x00, 4,        // TIS data size: 4
+		// TIS Parameter
+		0x00, 0x00, 0x00, 0x00,
+		0x00, 0x01, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x01,
+		0x00, 0x01, 0x00, 0x01,
+		0x00, 0x01, 0x00, 0x00,
+		// TIS Data
+		0x00, 0x01,
+		0x09,           // Job function 9=Force
+		0x00            // Job ID
+	};
+
+	da[31] = forcejobId;
+
+	p.header = dc->msgOut + dc->PDUstartO;
+	_daveInitPDUheader(&p, 7);
+	_daveAddParam(&p, pa, sizeof(pa));
+	_daveAddData(&p, da, sizeof(da));
+
+	res = _daveExchange(dc, &p);
+	if (res != daveResOK) {
+		return -1;
+	}
+	res = _daveSetupReceivedPDU(dc, &p2);
+	if (daveGetDebug() & daveDebugPDU) {
+		_daveDumpPDU(&p2);
+	}
+	// Error Code im Parameterteil prüfen
+	errorcode = daveGetU16from(&p2.param[10]);
+	return errorcode;
+}
+
+
+
+// Aktiviert einen Forceauftrag in der SPS.
+int DECL2 daveActivateForce(daveConnection *dc) {
+	PDU p, p2;
+	int res;
+	int pos;
+	int tds = 0;
+	int answersize = 0;
+	int datalen;
+	int item_cnt;
+	int tps;
+	int i;
+	int errorcode;
+
+	uc pa[] = {
+		0x00, 0x01, 0x12,
+		0x08,
+		0x12, 0x41, 0x09, 0x00,
+		0x00, 0x00, 0x00, 0x00
+	};
+	// Max. Größe bei 4 Bytes Daten pro Force
+	uc da[8 + 20 + 2 + (FORCE_MAX_ITEMS * (6 + 8))] = {
+		0xff, 0x09, 0x00, 0x00,
+		0x00, 20,       // TIS parameter size: 20 fix
+		0x00, 0x00,     // TIS data size: 4 muss spaeter angepasst werden
+		// TIS Parameter
+		0x00, 0x00, 0x01, 0x00,
+		0x00, 0x02, 0x00, 0x00,
+		0x00, 0x01, 0x00, 0x01,
+		0x00, 0x01, 0x00, 0x01,
+		0x00, 0x01, 0x00, 0x00,
+		// TIS Data
+		0x00, 0x00,
+		0x00, 0x00
+	};
+
+	da[28] = 0;
+	da[29] = dc->forceJob.itemcount;
+	tds = 2;
+	pos = 30;
+
+	// Noch kein Forceauftrag in Liste eingetragen.
+	if (dc->forceJob.itemcount == 0) {
+		return 0;
+	}
+	// Zu forcende Adressen eintragen
+	for (i = 0; i < dc->forceJob.itemcount; i++) {
+		da[pos++] = dc->forceJob.item[i].area;
+		// Repetition factor oder Bitposition
+		da[pos++] = dc->forceJob.item[i].bitPos_repf;
+		// DB Nummer hier immer 0
+		da[pos++] = 0;
+		da[pos++] = 0;
+		// Startadresse
+		da[pos++] = dc->forceJob.item[i].bytePos / 256;
+		da[pos++] = dc->forceJob.item[i].bytePos % 256;
+		tds += 6;
+	}
+
+	// Zu forcende Werte eintragen
+	for (i = 0; i < dc->forceJob.itemcount; i++) {
+		da[pos++] = 0x00;
+		da[pos++] = 0x09;   // 0x09 = Octet string
+		// Länge
+		da[pos++] = 0;
+		da[pos++] = dc->forceJob.item[i].len;
+		tds += 4;
+		// Daten
+		memcpy(&(da[pos]), dc->forceJob.item[i].value, dc->forceJob.item[i].len);
+		pos += dc->forceJob.item[i].len;
+		tds += dc->forceJob.item[i].len;
+		// Wenn Länge ungerade dann folgt ein Füllbyte
+		if (dc->forceJob.item[i].len % 2) {
+			da[pos++] = 0x00;
+			tds += 1;
+		}
+	}
+
+	// Answer size berechnen.
+	// Je Item folgt 1 Byte Bestätigung + 2 byte Item Count + ggf. Füllbyte.
+	// Es scheint bei der IM151-8 überhaupt kein Unterschied zu machen ob hier ein Wert eingetragen ist, 0 funktioniert auch.
+	// Aber zur Sicherheit machen wir es so wie es auch Step7 macht.
+	answersize = 2 + dc->forceJob.itemcount;
+	if (answersize % 2) {
+		answersize += 1;    // Füllbyte wenn Anzahl ungerade
+	}
+	da[14] = answersize / 256;
+	da[15] = answersize % 256;
+
+	datalen = 4 + 20 + tds;
+	da[2] = datalen / 256;
+	da[3] = datalen % 256;
+	// TIS Data size eintragen
+	da[6] = tds / 256;
+	da[7] = tds % 256;
+
+	p.header = dc->msgOut + dc->PDUstartO;
+	_daveInitPDUheader(&p, 7);
+	_daveAddParam(&p, pa, sizeof(pa));
+	_daveAddData(&p, da, datalen + 4);
+
+	res = _daveExchange(dc, &p);
+	if (res != daveResOK) {
+		return -1;
+	}
+	res = _daveSetupReceivedPDU(dc, &p2);
+	if (daveGetDebug() & daveDebugPDU) {
+		_daveDumpPDU(&p2);
+	}
+	// Error Code im Parameterteil prüfen
+	errorcode = daveGetU16from(&p2.param[10]);
+	// Wenn Errorcode == 0 dann folgt noch ein weiteres Push-Telegramm von der SPS mit
+	// den Informationen über die einzelnen Force-Items.
+	if (errorcode != 0) {
+		if (daveDebug & daveDebugPrintErrors) {
+			LOG2("daveActivateForce: errorcode = %d\n", errorcode);
+		}
+		return errorcode;
+	}
+	else {
+		res = _daveGetResponseISO_TCP(dc);
+		if (res == daveResOK) {
+			res = _daveSetupReceivedPDU(dc, &p2);
+			if (daveGetDebug() & daveDebugPDU) {
+				_daveDumpPDU(&p2);
+			}
+			res = _daveTestResultData(&p2);
+			if (res != daveResOK) {
+				if (daveDebug & daveDebugPrintErrors) {
+					LOG2("daveActivateForce: Fehler, p2.data = 0x%02x\n", p2.data[0]);
+				}
+				return res;
+			}
+
+			// Min. Größe für eine Antwort ist 12
+			if (p2.udlen < 12) {
+				if (daveDebug & daveDebugPrintErrors) {
+					LOG2("daveActivateForce: Push-Response zu kurz, p2.udlen = %d\n", p2.udlen);
+				}
+				return -2;
+			}
+			// Die Item-Rückgabewerte prüfen. Gibt an ob eine Adresse mit Erfolg
+			// geforced werden konnte.
+			pos = 4;
+			tps = daveGetU16from(&p2.data[pos]);
+			pos += 2;
+			tds = daveGetU16from(&p2.data[pos]);
+			pos += 2;
+			// Parameter überspringen
+			pos += tps;
+			// Ein Job ist immer 4 Bytes groß. Vermutlich kann immer nur ein Forcejob aktiv sein,
+			// da es bei einer S7-300 zumindest einen Fehler gibt, wenn ein Force angemeldet werden soll
+			// und schon einer aktiv ist.
+			item_cnt = daveGetU16from(&p2.data[pos]);
+			pos += 2;
+			for (i = 0; i < item_cnt; i++) {
+				dc->forceJob.item[i].retCode = p2.data[pos++];
+				if (daveDebug & daveDebugPrintErrors) {
+					if (dc->forceJob.item[i].retCode != 0xff) {
+						LOG3("daveActivateForce: item[%i] mit Fehler geforced. retCode = 0x%02x\n", i, dc->forceJob.item[i].retCode);
+					}
+					else {
+						LOG2("daveActivateForce: item[%i] mit Erfolg geforced.\n", i);
+					}
+				}
+			}
+		}
+	}
+	return 0;
+}
+
+// Gibt den Rückgabewert eines Items des letzten Forceauftrags zurück
+int DECL2 daveGetForceJobReturnCode(daveConnection *dc, int itemNo) {
+	int ret = daveResInvalidParam;
+	if (itemNo >= 0 && itemNo < dc->forceJob.itemcount) {
+		switch (dc->forceJob.item[itemNo].retCode) {
+		case 0x0A:
+			ret = daveResItemNotAvailable;
+			break;
+		case 0x03:
+			ret = daveAddressOutOfRange;
+			break;
+		case 0x05:
+			ret = daveResItemNotAvailable;
+			break;
+		case 0xFF:
+			ret = daveResOK;
+			break;
+		case 0x07:
+			ret = daveWriteDataSizeMismatch;
+			break;
+		default:
+			ret = daveUnknownError;
+			break;
+		}
+	}
+	return ret;
+}
+
+/*
+ * End Forces
+ ******************************************************************************/
+
 
 /*
 error code to message string conversion:
@@ -5533,7 +5976,7 @@ int DECL2 __daveAnalyze(daveConnection * dc) {
 		if (daveDebug & daveDebugMPI){
 			LOG2("srcconn: %d\n", pm->src_conn);
 			LOG2("dstconn: %d\n", pm->dst_conn);
-			LOG2("MPI:     %d\n",pm->MPI);
+			LOG2("MPI:     %d\n", pm->MPI);
 			LOG2("MPI len: %d\n", pm->len);
 			LOG2("MPI func:%d\n", pm->func);
 		}
@@ -7293,7 +7736,7 @@ int DECL2 daveReadS5Bytes(daveConnection * dc, uc area, uc BlockN, int offset, i
 	//	if (_daveIsS5BlockArea(area)==0) {
 	if (area == daveDB) {
 		res = _daveReadS5BlockAddress(dc, area, BlockN, &ai);//TODO make address cache
-		if (res<0) {
+		if (res < 0) {
 			LOG2("%s *** Error in ReadS5Bytes.BlockAddr request.\n", dc->iface->name);
 			return res - 50;
 		}
