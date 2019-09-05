@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -32,10 +33,28 @@ namespace TiaGitHandler
         private static bool removeOnlyOneBlank = true;
         private static bool removeNoBlanks = false;
 
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool GetConsoleMode(
+        IntPtr hConsoleHandle,
+         out int lpMode);
+
+        [DllImport("kernel32.dll", SetLastError = true)]
+        public static extern bool SetConsoleMode(
+            IntPtr hConsoleHandle,
+            int ioMode);
+
+        public const int STD_INPUT_HANDLE = -10;
+
+        [DllImport("Kernel32.dll", SetLastError = true)]
+        public static extern IntPtr GetStdHandle(int nStdHandle);
+
+        const int ExtendedFlags = 128;
+        const int QuickEditMode = 64;
+
         [STAThread]
         static void Main(string[] args)
         {
-
+            bool hasArgs = args.Count() > 0;
             string file = "";
             string exportPath = "";
             string user = Settings.Default.DefaultUser;
@@ -44,7 +63,7 @@ namespace TiaGitHandler
 
             Project prj = null;
 
-            if (args.Count() < 1)
+            if (!hasArgs)
             {
                 Application app = new Application();
                 var ask = new AskOpen();
@@ -55,6 +74,8 @@ namespace TiaGitHandler
                 removeAllBlanks = ask.rbRemoveAllBlanks.IsChecked == true;
                 removeOnlyOneBlank = ask.rbRemoveOnlyOneBlank.IsChecked == true;
                 removeNoBlanks = ask.rbRemoveNoBlanks.IsChecked == true;
+
+                DisableQuickEdit();
 
                 if (object.Equals(res, false))
                 {
@@ -170,7 +191,8 @@ namespace TiaGitHandler
             skippedBlocksList.ForEach(i => Console.WriteLine("{0}", i));
             Console.WriteLine();
             Console.WriteLine(skippedBlocksList.Count() + " blocks were skipped");
-            Console.ReadKey();
+            if (!hasArgs)
+                Console.ReadKey();
         }
 
         private class EncodingStringWriter : StringWriter
@@ -464,6 +486,18 @@ namespace TiaGitHandler
                                 {
                                 }
 
+                                try
+                                {
+                                    var nodes = xmlDoc.SelectNodes("//*[local-name()='Member'][contains(@Datatype,'\"')]//*[local-name()='Sections']");
+                                    foreach (var node in nodes.Cast<XmlNode>())
+                                    {
+                                        node.ParentNode.RemoveChild(node);
+                                    }
+                                }
+                                catch
+                                {
+                                }
+
                                 if (resetSetpoints)
                                 {
                                     try
@@ -721,6 +755,21 @@ namespace TiaGitHandler
                                             foreach (var node in nodes.Cast<XmlNode>())
                                             {
                                                 node.InnerText = "false";
+                                            }
+                                        }
+                                        catch
+                                        {
+                                        }
+                                    }
+
+                                    if (projectBlockInfo.BlockTypeString == "Userdatatype" || projectBlockInfo.BlockTypeString == "Functionblock")
+                                    {
+                                        try
+                                        {
+                                            var nodes = xmlDoc2.SelectNodes("//*[local-name()='Member'][contains(@Datatype,'\"')]//*[local-name()='Sections']");
+                                            foreach (var node in nodes.Cast<XmlNode>())
+                                            {
+                                                node.ParentNode.RemoveChild(node);
                                             }
                                         }
                                         catch
@@ -1005,6 +1054,27 @@ namespace TiaGitHandler
             catch (UnauthorizedAccessException)
             {
                 DeleteDir(dir);
+            }
+        }
+
+        private static void DisableQuickEdit()
+        {
+            IntPtr conHandle = GetStdHandle(STD_INPUT_HANDLE);
+            int mode;
+
+            if (!GetConsoleMode(conHandle, out mode))
+            {
+                Console.WriteLine("err1");
+                // error getting the console mode. Exit.
+                return;
+            }
+
+            mode = mode & ~(QuickEditMode | ExtendedFlags);
+
+            if (!SetConsoleMode(conHandle, mode))
+            {
+                Console.WriteLine("err2");
+                // error setting console mode.
             }
         }
     }

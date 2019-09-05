@@ -260,6 +260,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
 #if !IPHONE
                     case LibNodaveConnectionTypes.Use_Step7_DLL:
+                    case LibNodaveConnectionTypes.Use_Step7_DLL_Without_TCP:
                         _errorCodeConverter = libnodave.daveStrerror;
                         _fds.rfd = libnodave.openS7online(_configuration.EntryPoint, 0);
                         if (_fds.rfd.ToInt32() == -1)
@@ -332,7 +333,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                     }
 
                     //if the read handle is still null or even has an error code, except for Simatic NEt connectoins
-                    if ((_configuration.ConnectionType != LibNodaveConnectionTypes.Use_Step7_DLL && _fds.rfd.ToInt32() == 0) || _fds.rfd.ToInt32() < 0)
+                    if ((_configuration.ConnectionType != LibNodaveConnectionTypes.Use_Step7_DLL && _configuration.ConnectionType != LibNodaveConnectionTypes.Use_Step7_DLL_Without_TCP && _fds.rfd.ToInt32() == 0) || _fds.rfd.ToInt32() < 0)
                     {
                         _NeedDispose = false;
                         throw new Exception(
@@ -366,23 +367,19 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
 
                 //Get S7OnlineType - To detect if is a IPConnection 
                 bool IPConnection = false;
+
+                var connectiontypeNumber = (int)_configuration.PLCConnectionType;
+                var routingConnectiontypeNumber = (int)_configuration.RoutingPLCConnectionType;
 #if !IPHONE
                 if (_configuration.ConnectionType == LibNodaveConnectionTypes.Use_Step7_DLL)
                 {
-                    RegistryKey myConnectionKey =
-                        Registry.LocalMachine.CreateSubKey("SOFTWARE\\Siemens\\SINEC\\LogNames\\" +
-                                                           _configuration.EntryPoint);
-                    string tmpDevice = (string)myConnectionKey.GetValue("LogDevice");
-                    string retVal = "";
-                    if (tmpDevice != "")
-                    {
-                        myConnectionKey =
-                            Registry.LocalMachine.CreateSubKey("SOFTWARE\\Siemens\\SINEC\\LogDevices\\" + tmpDevice);
-                        retVal = (string)myConnectionKey.GetValue("L4_PROTOCOL");
-                    }
-                    if (retVal == "TCPIP" || retVal == "ISO")
-                        IPConnection = true;
+                    IPConnection = true;
                 }
+                else if (_configuration.ConnectionType == LibNodaveConnectionTypes.Use_Step7_DLL_Without_TCP)
+                {
+                    IPConnection = false;
+                }
+       
                 //Get S7OnlineType - To detect if is a IPConnection
 #endif
                 #endregion
@@ -398,9 +395,8 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                         _configuration.CpuRack, _configuration.CpuSlot, _configuration.Routing,
                         _configuration.RoutingSubnet1, _configuration.RoutingSubnet2,
                         _configuration.RoutingDestinationRack, _configuration.RoutingDestinationSlot,
-                        _configuration.RoutingDestination, (int)_configuration.PLCConnectionType,
-                        (int)_configuration.RoutingPLCConnectionType,
-                        _configuration.MaxPDUlength);
+                        _configuration.RoutingDestination, connectiontypeNumber,
+                        routingConnectiontypeNumber, _configuration.MaxPDUlength);
                 }
                 else
                 {
@@ -4411,6 +4407,7 @@ namespace DotNetSiemensPLCToolBoxLibrary.Communication
                             libnodave.closePort(_fds.rfd);
                             break;
                         case LibNodaveConnectionTypes.Use_Step7_DLL:
+                        case LibNodaveConnectionTypes.Use_Step7_DLL_Without_TCP:
                             libnodave.closeS7online(_fds.rfd);
                             break;
                         case LibNodaveConnectionTypes.ISO_over_TCP:

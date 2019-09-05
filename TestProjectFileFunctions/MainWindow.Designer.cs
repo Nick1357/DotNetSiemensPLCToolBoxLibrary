@@ -81,6 +81,9 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openWithUsernameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.attach14ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.attach15_1ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.configConnectionToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -115,7 +118,6 @@
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             this.tableLayoutPanelVisu = new System.Windows.Forms.TableLayoutPanel();
             this.datablockView = new System.Windows.Forms.Integration.ElementHost();
-            this.dataBlockViewControl = new TestProjectFileFunctions.DataBlockViewControl();
             this.hexBox = new Be.Windows.Forms.HexBox();
             this.dtaPnPbList = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -167,7 +169,7 @@
             this.treeStep7Project.Location = new System.Drawing.Point(3, 3);
             this.treeStep7Project.Name = "treeStep7Project";
             this.treeStep7Project.SelectedImageIndex = 0;
-            this.treeStep7Project.Size = new System.Drawing.Size(251, 164);
+            this.treeStep7Project.Size = new System.Drawing.Size(307, 190);
             this.treeStep7Project.TabIndex = 4;
             this.treeStep7Project.BeforeCollapse += new System.Windows.Forms.TreeViewCancelEventHandler(this.treeStep7Project_BeforeCollapse);
             this.treeStep7Project.BeforeExpand += new System.Windows.Forms.TreeViewCancelEventHandler(this.treeStep7Project_BeforeExpand);
@@ -208,39 +210,52 @@
             this.dtaSymbolTable.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dtaSymbolTable.Location = new System.Drawing.Point(0, 0);
             this.dtaSymbolTable.Name = "dtaSymbolTable";
-            this.dtaSymbolTable.Size = new System.Drawing.Size(499, 301);
+            this.dtaSymbolTable.RowHeadersWidth = 82;
+            this.dtaSymbolTable.Size = new System.Drawing.Size(610, 327);
             this.dtaSymbolTable.TabIndex = 5;
             this.dtaSymbolTable.Visible = false;
             // 
             // symbol
             // 
             this.symbol.HeaderText = "symbol";
+            this.symbol.MinimumWidth = 10;
             this.symbol.Name = "symbol";
+            this.symbol.Width = 200;
             // 
             // datatype
             // 
             this.datatype.HeaderText = "datatype";
+            this.datatype.MinimumWidth = 10;
             this.datatype.Name = "datatype";
+            this.datatype.Width = 200;
             // 
             // operand
             // 
             this.operand.HeaderText = "operand";
+            this.operand.MinimumWidth = 10;
             this.operand.Name = "operand";
+            this.operand.Width = 200;
             // 
             // operandiec
             // 
             this.operandiec.HeaderText = "operandiec";
+            this.operandiec.MinimumWidth = 10;
             this.operandiec.Name = "operandiec";
+            this.operandiec.Width = 200;
             // 
             // comment
             // 
             this.comment.HeaderText = "comment";
+            this.comment.MinimumWidth = 10;
             this.comment.Name = "comment";
+            this.comment.Width = 200;
             // 
             // tia_key
             // 
             this.tia_key.HeaderText = "tia_key";
+            this.tia_key.MinimumWidth = 10;
             this.tia_key.Name = "tia_key";
+            this.tia_key.Width = 200;
             // 
             // lstListBox
             // 
@@ -249,7 +264,7 @@
             this.lstListBox.ItemHeight = 16;
             this.lstListBox.Location = new System.Drawing.Point(3, 3);
             this.lstListBox.Name = "lstListBox";
-            this.lstListBox.Size = new System.Drawing.Size(243, 234);
+            this.lstListBox.Size = new System.Drawing.Size(354, 260);
             this.lstListBox.TabIndex = 6;
             this.lstListBox.SelectedIndexChanged += new System.EventHandler(this.listBox1_SelectedIndexChanged);
             this.lstListBox.DoubleClick += new System.EventHandler(this.listBox1_DoubleClick);
@@ -262,7 +277,7 @@
             this.txtTextBox.Multiline = true;
             this.txtTextBox.Name = "txtTextBox";
             this.txtTextBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.txtTextBox.Size = new System.Drawing.Size(499, 301);
+            this.txtTextBox.Size = new System.Drawing.Size(610, 327);
             this.txtTextBox.TabIndex = 7;
             this.txtTextBox.Visible = false;
             this.txtTextBox.WordWrap = false;
@@ -270,7 +285,7 @@
             // chkShowDeleted
             // 
             this.chkShowDeleted.AutoSize = true;
-            this.chkShowDeleted.Location = new System.Drawing.Point(3, 280);
+            this.chkShowDeleted.Location = new System.Drawing.Point(3, 306);
             this.chkShowDeleted.Name = "chkShowDeleted";
             this.chkShowDeleted.Size = new System.Drawing.Size(123, 18);
             this.chkShowDeleted.TabIndex = 8;
@@ -318,7 +333,7 @@
             // 
             // cmdUndeleteBlock
             // 
-            this.cmdUndeleteBlock.Location = new System.Drawing.Point(3, 33);
+            this.cmdUndeleteBlock.Location = new System.Drawing.Point(365, 3);
             this.cmdUndeleteBlock.Name = "cmdUndeleteBlock";
             this.cmdUndeleteBlock.Size = new System.Drawing.Size(164, 24);
             this.cmdUndeleteBlock.TabIndex = 12;
@@ -329,7 +344,7 @@
             // 
             // txtUndeleteName
             // 
-            this.txtUndeleteName.Location = new System.Drawing.Point(173, 33);
+            this.txtUndeleteName.Location = new System.Drawing.Point(3, 33);
             this.txtUndeleteName.Name = "txtUndeleteName";
             this.txtUndeleteName.Size = new System.Drawing.Size(68, 22);
             this.txtUndeleteName.TabIndex = 13;
@@ -356,9 +371,9 @@
             this.grpVisu.Controls.Add(this.cmdCreateWinCCErrorMessages);
             this.grpVisu.Controls.Add(this.cmdCreateFlexibleErrorMessages);
             this.grpVisu.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.grpVisu.Location = new System.Drawing.Point(252, 3);
+            this.grpVisu.Location = new System.Drawing.Point(363, 3);
             this.grpVisu.Name = "grpVisu";
-            this.grpVisu.Size = new System.Drawing.Size(232, 234);
+            this.grpVisu.Size = new System.Drawing.Size(232, 260);
             this.grpVisu.TabIndex = 16;
             this.grpVisu.TabStop = false;
             this.grpVisu.Text = "Visualization Toolbox";
@@ -543,10 +558,10 @@
             this.lblConnInfo,
             this.toolStripStatusLabel1,
             this.lblConnected});
-            this.statusStrip.Location = new System.Drawing.Point(0, 399);
+            this.statusStrip.Location = new System.Drawing.Point(0, 425);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Padding = new System.Windows.Forms.Padding(1, 0, 13, 0);
-            this.statusStrip.Size = new System.Drawing.Size(766, 22);
+            this.statusStrip.Size = new System.Drawing.Size(933, 42);
             this.statusStrip.SizingGrip = false;
             this.statusStrip.TabIndex = 22;
             this.statusStrip.Text = "statusStrip1";
@@ -555,13 +570,13 @@
             // 
             this.lblToolStripFileSystemFolder.AutoSize = false;
             this.lblToolStripFileSystemFolder.Name = "lblToolStripFileSystemFolder";
-            this.lblToolStripFileSystemFolder.Size = new System.Drawing.Size(600, 17);
+            this.lblToolStripFileSystemFolder.Size = new System.Drawing.Size(600, 37);
             this.lblToolStripFileSystemFolder.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // lblStatus
             // 
             this.lblStatus.Name = "lblStatus";
-            this.lblStatus.Size = new System.Drawing.Size(1, 17);
+            this.lblStatus.Size = new System.Drawing.Size(57, 37);
             this.lblStatus.Spring = true;
             this.lblStatus.Text = "i.o.";
             this.lblStatus.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -570,19 +585,19 @@
             // 
             this.lblConnInfo.AutoSize = false;
             this.lblConnInfo.Name = "lblConnInfo";
-            this.lblConnInfo.Size = new System.Drawing.Size(230, 17);
+            this.lblConnInfo.Size = new System.Drawing.Size(230, 37);
             // 
             // toolStripStatusLabel1
             // 
             this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(13, 17);
+            this.toolStripStatusLabel1.Size = new System.Drawing.Size(13, 37);
             this.toolStripStatusLabel1.Text = "  ";
             // 
             // lblConnected
             // 
             this.lblConnected.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.lblConnected.Name = "lblConnected";
-            this.lblConnected.Size = new System.Drawing.Size(19, 17);
+            this.lblConnected.Size = new System.Drawing.Size(19, 37);
             this.lblConnected.Text = "    ";
             // 
             // lstProjects
@@ -592,7 +607,7 @@
             this.lstProjects.ItemHeight = 16;
             this.lstProjects.Location = new System.Drawing.Point(3, 3);
             this.lstProjects.Name = "lstProjects";
-            this.lstProjects.Size = new System.Drawing.Size(161, 95);
+            this.lstProjects.Size = new System.Drawing.Size(217, 95);
             this.lstProjects.TabIndex = 24;
             this.lstProjects.DoubleClick += new System.EventHandler(this.lstProjects_DoubleClick);
             // 
@@ -600,7 +615,7 @@
             // 
             this.cmdProjectsBrowser.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cmdProjectsBrowser.Font = new System.Drawing.Font("Courier New", 6.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cmdProjectsBrowser.Location = new System.Drawing.Point(170, 3);
+            this.cmdProjectsBrowser.Location = new System.Drawing.Point(226, 3);
             this.cmdProjectsBrowser.Name = "cmdProjectsBrowser";
             this.cmdProjectsBrowser.Size = new System.Drawing.Size(78, 95);
             this.cmdProjectsBrowser.TabIndex = 25;
@@ -619,7 +634,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(766, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(933, 24);
             this.menuStrip1.TabIndex = 26;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -627,6 +642,9 @@
             // 
             this.fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.openToolStripMenuItem,
+            this.openWithUsernameToolStripMenuItem,
+            this.attach14ToolStripMenuItem,
+            this.attach15_1ToolStripMenuItem,
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
@@ -635,14 +653,32 @@
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.openToolStripMenuItem.Text = "Open";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // openWithUsernameToolStripMenuItem
+            // 
+            this.openWithUsernameToolStripMenuItem.Name = "openToolStripMenuItem";
+            this.openWithUsernameToolStripMenuItem.Text = "Open with Username";
+            this.openWithUsernameToolStripMenuItem.Click += new System.EventHandler(this.openUsernameToolStripMenuItem_Click);
+            // 
+            // attach14ToolStripMenuItem
+            // 
+            this.attach14ToolStripMenuItem.Name = "attach14ToolStripMenuItem";
+            this.attach14ToolStripMenuItem.Text = "Attach V14";
+            this.attach14ToolStripMenuItem.Click += new System.EventHandler(this.attachV14_Click);
+            // 
+            // openWithUsernameToolStripMenuItem
+            // 
+            this.attach15_1ToolStripMenuItem.Name = "attach15_1ToolStripMenuItem";
+            this.attach15_1ToolStripMenuItem.Text = "Attach V15.1";
+            this.attach15_1ToolStripMenuItem.Click += new System.EventHandler(this.attachV15_1_Click);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -854,8 +890,8 @@
             this.mainSplitContainer.Panel2.Controls.Add(this.hexBox);
             this.mainSplitContainer.Panel2.Controls.Add(this.txtTextBox);
             this.mainSplitContainer.Panel2.Controls.Add(this.dtaPnPbList);
-            this.mainSplitContainer.Size = new System.Drawing.Size(760, 301);
-            this.mainSplitContainer.SplitterDistance = 257;
+            this.mainSplitContainer.Size = new System.Drawing.Size(927, 327);
+            this.mainSplitContainer.SplitterDistance = 313;
             this.mainSplitContainer.TabIndex = 26;
             // 
             // tableLayoutPanel1
@@ -872,7 +908,7 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 107F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 24F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(257, 301);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(313, 327);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // tableLayoutPanel2
@@ -883,11 +919,11 @@
             this.tableLayoutPanel2.Controls.Add(this.lstProjects, 0, 0);
             this.tableLayoutPanel2.Controls.Add(this.cmdProjectsBrowser, 1, 0);
             this.tableLayoutPanel2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 173);
+            this.tableLayoutPanel2.Location = new System.Drawing.Point(3, 199);
             this.tableLayoutPanel2.Name = "tableLayoutPanel2";
             this.tableLayoutPanel2.RowCount = 1;
             this.tableLayoutPanel2.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel2.Size = new System.Drawing.Size(251, 101);
+            this.tableLayoutPanel2.Size = new System.Drawing.Size(307, 101);
             this.tableLayoutPanel2.TabIndex = 0;
             // 
             // viewBlockList
@@ -896,7 +932,7 @@
             this.viewBlockList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.viewBlockList.Location = new System.Drawing.Point(0, 0);
             this.viewBlockList.Name = "viewBlockList";
-            this.viewBlockList.Size = new System.Drawing.Size(499, 301);
+            this.viewBlockList.Size = new System.Drawing.Size(610, 327);
             this.viewBlockList.TabIndex = 0;
             this.viewBlockList.TabStop = false;
             this.viewBlockList.Visible = false;
@@ -913,7 +949,7 @@
             this.tableLayoutPanel3.RowCount = 2;
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel3.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 34F));
-            this.tableLayoutPanel3.Size = new System.Drawing.Size(493, 280);
+            this.tableLayoutPanel3.Size = new System.Drawing.Size(604, 306);
             this.tableLayoutPanel3.TabIndex = 0;
             // 
             // flowLayoutPanel1
@@ -923,9 +959,9 @@
             this.flowLayoutPanel1.Controls.Add(this.cmdUndeleteBlock);
             this.flowLayoutPanel1.Controls.Add(this.txtUndeleteName);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 249);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(3, 275);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(487, 28);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(598, 28);
             this.flowLayoutPanel1.TabIndex = 11;
             // 
             // tableLayoutPanelVisu
@@ -940,7 +976,7 @@
             this.tableLayoutPanelVisu.Name = "tableLayoutPanelVisu";
             this.tableLayoutPanelVisu.RowCount = 1;
             this.tableLayoutPanelVisu.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanelVisu.Size = new System.Drawing.Size(487, 240);
+            this.tableLayoutPanelVisu.Size = new System.Drawing.Size(598, 266);
             this.tableLayoutPanelVisu.TabIndex = 12;
             // 
             // datablockView
@@ -948,12 +984,12 @@
             this.datablockView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.datablockView.Location = new System.Drawing.Point(0, 0);
             this.datablockView.Name = "datablockView";
-            this.datablockView.Size = new System.Drawing.Size(499, 301);
+            this.datablockView.Size = new System.Drawing.Size(610, 327);
             this.datablockView.TabIndex = 17;
             this.datablockView.Text = "wpfElementHost";
             this.datablockView.Visible = false;
             this.datablockView.ChildChanged += new System.EventHandler<System.Windows.Forms.Integration.ChildChangedEventArgs>(this.elementHost1_ChildChanged);
-            this.datablockView.Child = this.dataBlockViewControl;
+            this.datablockView.Child = null;
             // 
             // hexBox
             // 
@@ -963,7 +999,7 @@
             this.hexBox.Location = new System.Drawing.Point(0, 0);
             this.hexBox.Name = "hexBox";
             this.hexBox.ShadowSelectionColor = System.Drawing.Color.FromArgb(((int)(((byte)(100)))), ((int)(((byte)(60)))), ((int)(((byte)(188)))), ((int)(((byte)(255)))));
-            this.hexBox.Size = new System.Drawing.Size(499, 301);
+            this.hexBox.Size = new System.Drawing.Size(610, 327);
             this.hexBox.TabIndex = 18;
             // 
             // dtaPnPbList
@@ -979,19 +1015,24 @@
             this.dtaPnPbList.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dtaPnPbList.Location = new System.Drawing.Point(0, 0);
             this.dtaPnPbList.Name = "dtaPnPbList";
-            this.dtaPnPbList.Size = new System.Drawing.Size(499, 301);
+            this.dtaPnPbList.RowHeadersWidth = 82;
+            this.dtaPnPbList.Size = new System.Drawing.Size(610, 327);
             this.dtaPnPbList.TabIndex = 19;
             this.dtaPnPbList.Visible = false;
             // 
             // dataGridViewTextBoxColumn1
             // 
             this.dataGridViewTextBoxColumn1.HeaderText = "id";
+            this.dataGridViewTextBoxColumn1.MinimumWidth = 10;
             this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.Width = 200;
             // 
             // dataGridViewTextBoxColumn2
             // 
             this.dataGridViewTextBoxColumn2.HeaderText = "name";
+            this.dataGridViewTextBoxColumn2.MinimumWidth = 10;
             this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            this.dataGridViewTextBoxColumn2.Width = 200;
             // 
             // exportMenu
             // 
@@ -1020,7 +1061,7 @@
             this.tableLayoutPanel5.RowCount = 2;
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 68F));
             this.tableLayoutPanel5.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel5.Size = new System.Drawing.Size(766, 375);
+            this.tableLayoutPanel5.Size = new System.Drawing.Size(933, 401);
             this.tableLayoutPanel5.TabIndex = 28;
             // 
             // panel1
@@ -1033,14 +1074,14 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(3, 3);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(760, 62);
+            this.panel1.Size = new System.Drawing.Size(927, 62);
             this.panel1.TabIndex = 0;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
-            this.ClientSize = new System.Drawing.Size(766, 421);
+            this.ClientSize = new System.Drawing.Size(933, 467);
             this.Controls.Add(this.tableLayoutPanel5);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.menuStrip1);
@@ -1125,6 +1166,9 @@
         private System.Windows.Forms.ToolStripMenuItem featuresToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem openWithUsernameToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem attach14ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem attach15_1ToolStripMenuItem;
         private System.Windows.Forms.SplitContainer mainSplitContainer;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel2;
